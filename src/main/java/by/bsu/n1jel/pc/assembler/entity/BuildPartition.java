@@ -10,15 +10,15 @@ import lombok.RequiredArgsConstructor;
 @Data
 public class BuildPartition {
     @Id
-    @GeneratedValue
+    @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
 
-    @ManyToOne
+    @ManyToOne(optional = false)
     private Build build;
 
-    @ManyToOne
+    @ManyToOne(optional = false)
     private Component component;
 
-    @Column(name = "quantity")
+    @Column(name = "quantity", nullable = false)
     private Integer quantity;
 }

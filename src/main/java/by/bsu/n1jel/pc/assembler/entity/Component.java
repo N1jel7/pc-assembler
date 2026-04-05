@@ -13,22 +13,25 @@ import java.util.List;
 @Data
 public class Component {
     @Id
-    @GeneratedValue
+    @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
 
-    @ManyToOne
+    @Column(name = "name", nullable = false)
+    private String name;
+
+    @ManyToOne(optional = false, fetch = FetchType.LAZY)
     private Producer producer;
 
-    @ManyToOne
+    @ManyToOne(optional = false)
     private ComponentType componentType;
 
-    @Column(name = "price")
+    @Column(name = "price", nullable = false)
     private BigDecimal price;
 
-    @Column(name = "stock_quantity")
+    @Column(name = "stock_quantity", nullable = false)
     private Integer stockQuantity;
 
-    @OneToMany
+    @OneToMany(mappedBy = "component", fetch = FetchType.LAZY)
     private List<Specification> specifications;
 
     @Column(name = "image_url")

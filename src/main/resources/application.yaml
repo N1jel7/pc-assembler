@@ -1,0 +1,12 @@
+spring:
+  liquibase:
+    enabled: true
+  application:
+    name: pc-assembler
+  jpa:
+    hibernate:
+      ddl-auto: none
+    open-in-view: false
+logging:
+  level:
+    sql: debug

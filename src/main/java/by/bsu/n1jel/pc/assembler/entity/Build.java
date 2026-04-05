@@ -5,6 +5,7 @@ import lombok.Data;
 import lombok.RequiredArgsConstructor;
 
 import java.sql.Timestamp;
+import java.util.List;
 
 @RequiredArgsConstructor
 @Entity
@@ -12,12 +13,15 @@ import java.sql.Timestamp;
 @Data
 public class Build {
     @Id
-    @GeneratedValue
+    @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
 
-    @Column(name = "name")
+    @OneToMany(mappedBy = "build", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private List<BuildPartition> buildPartitions;
+
+    @Column(name = "name", nullable = false)
     private String name;
 
-    @Column(name = "creation_date")
+    @Column(name = "creation_date", nullable = false)
     private Timestamp creationDate;
 }
