@@ -1,16 +1,15 @@
 package by.bsu.n1jel.pc.assembler.entity;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.RequiredArgsConstructor;
+import lombok.*;
+
+import java.util.List;
 
 @Data
 @Builder
 @Inheritance(strategy = InheritanceType.SINGLE_TABLE)
 @Entity
-@RequiredArgsConstructor
+@NoArgsConstructor
 @AllArgsConstructor
 public class Specification {
 
@@ -23,10 +22,4 @@ public class Specification {
 
     @Column(name = "description")
     private String description;
-
-    @Column(name = "value", nullable = false)
-    private String value;
-
-    @ManyToOne
-    private Component component;
 }

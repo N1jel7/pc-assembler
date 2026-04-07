@@ -1,13 +1,14 @@
 package by.bsu.n1jel.pc.assembler.entity;
 
 import jakarta.persistence.*;
-import lombok.Data;
-import lombok.RequiredArgsConstructor;
+import lombok.*;
 
 import java.math.BigDecimal;
 import java.util.List;
 
-@RequiredArgsConstructor
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 @Entity
 @Table(name = "components")
 @Data
@@ -31,8 +32,8 @@ public class Component {
     @Column(name = "stock_quantity", nullable = false)
     private Integer stockQuantity;
 
-    @OneToMany(mappedBy = "component", fetch = FetchType.LAZY)
-    private List<Specification> specifications;
+    @OneToMany(mappedBy = "componentId",fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    private List<ComponentSpecification> specifications;
 
     @Column(name = "image_url")
     private String imageUrl;

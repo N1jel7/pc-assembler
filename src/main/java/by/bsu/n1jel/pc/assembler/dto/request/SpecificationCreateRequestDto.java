@@ -1,4 +1,7 @@
 package by.bsu.n1jel.pc.assembler.dto.request;
 
-public record SpecificationCreateRequestDto() {
+public record SpecificationCreateRequestDto(
+        String name,
+        String description
+) {
 }

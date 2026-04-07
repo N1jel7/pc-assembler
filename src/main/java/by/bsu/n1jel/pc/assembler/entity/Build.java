@@ -1,13 +1,14 @@
 package by.bsu.n1jel.pc.assembler.entity;
 
 import jakarta.persistence.*;
-import lombok.Data;
-import lombok.RequiredArgsConstructor;
+import lombok.*;
 
 import java.sql.Timestamp;
 import java.util.List;
 
-@RequiredArgsConstructor
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 @Entity
 @Table(name = "builds")
 @Data
