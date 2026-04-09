@@ -32,6 +32,7 @@ public class Component {
     @Column(name = "stock_quantity", nullable = false)
     private Integer stockQuantity;
 
+    @ToString.Exclude // TODO временно
     @OneToMany(mappedBy = "componentId",fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     private List<ComponentSpecification> specifications;
 

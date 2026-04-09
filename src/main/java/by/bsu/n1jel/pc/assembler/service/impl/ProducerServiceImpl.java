@@ -9,6 +9,7 @@ import by.bsu.n1jel.pc.assembler.repository.ProducerRepository;
 import by.bsu.n1jel.pc.assembler.service.api.ProducerService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -34,6 +35,7 @@ public class ProducerServiceImpl implements ProducerService {
     }
 
     @Override
+    @Transactional
     public ProducerInfoResponseDto createProducer(ProducerCreateRequestDto requestDto) {
         Producer createdProducer = Producer.builder()
                 .name(requestDto.name())
@@ -48,6 +50,7 @@ public class ProducerServiceImpl implements ProducerService {
     }
 
     @Override
+    @Transactional
     public ProducerInfoResponseDto editProducerInfo(ProducerEditInfoRequestDto requestDto) {
         Producer producerFromDb = findProducerById(requestDto.id());
         producerFromDb = producerMapper.updateProducer(producerFromDb, requestDto);
@@ -55,6 +58,7 @@ public class ProducerServiceImpl implements ProducerService {
     }
 
     @Override
+    @Transactional
     public ProducerInfoResponseDto deleteProducerById(Long producerId) {
         Producer producerFromDb = findProducerById(producerId);
         ProducerInfoResponseDto responseDto = producerMapper.mapToResponseDto(producerFromDb);

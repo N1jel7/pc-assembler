@@ -1,16 +1,56 @@
 package by.bsu.n1jel.pc.assembler.mapper;
 
+import by.bsu.n1jel.pc.assembler.dto.request.ComponentEditRequestDto;
+import by.bsu.n1jel.pc.assembler.dto.request.ComponentTypeEditRequestDto;
+import by.bsu.n1jel.pc.assembler.dto.request.ComponentTypeInfoResponseDto;
 import by.bsu.n1jel.pc.assembler.dto.response.ComponentInfoResponseDto;
 import by.bsu.n1jel.pc.assembler.entity.Component;
-import org.mapstruct.Mapper;
-import org.mapstruct.MappingConstants;
+import by.bsu.n1jel.pc.assembler.entity.ComponentType;
+import by.bsu.n1jel.pc.assembler.entity.Producer;
+import org.mapstruct.*;
 
 import java.util.List;
 
-@Mapper(componentModel = MappingConstants.ComponentModel.SPRING)
+import static org.mapstruct.NullValuePropertyMappingStrategy.IGNORE;
+
+@Mapper(componentModel = MappingConstants.ComponentModel.SPRING, nullValuePropertyMappingStrategy = IGNORE)
 public interface ComponentMapper {
 
+    @Mapping(target = "producer", source = "producer", qualifiedByName = "getProducerId")
+    @Mapping(target = "componentType", source = "componentType", qualifiedByName = "getComponentTypeId")
+    @Mapping(target = "specifications", ignore = true)
     ComponentInfoResponseDto mapToResponseDto(Component component);
 
-    List<ComponentInfoResponseDto> mapToResponse(List<Component> components);
+    List<ComponentInfoResponseDto> mapToResponseDto(List<Component> components);
+
+    @Mapping(target = "componentParentType", source = "componentType", qualifiedByName = "getComponentParentTypeId")
+    ComponentTypeInfoResponseDto mapToTypeResponseDto(ComponentType componentType);
+
+    List<ComponentTypeInfoResponseDto> mapToTypeResponseDto(List<ComponentType> componentTypes);
+
+    @Mapping(target = "producer", ignore = true)
+    @Mapping(target = "componentType", ignore = true)
+    @Mapping(target = "specifications", ignore = true)
+    Component updateComponent(@MappingTarget Component component, ComponentEditRequestDto requestDto);
+
+    @Mapping(target = "componentParentType", ignore = true)
+    ComponentType updateComponentType(@MappingTarget ComponentType componentType, ComponentTypeEditRequestDto requestDto);
+
+    @Named("getProducerId")
+    default Long getProducerId(Producer producer) {
+        return producer.getId();
+    }
+
+    @Named("getComponentTypeId")
+    default Long getComponentTypeId(ComponentType componentType) {
+        return componentType.getId();
+    }
+
+    @Named("getComponentParentTypeId")
+    default Long getComponentParentTypeId(ComponentType componentType) {
+        if(componentType.getComponentParentType() != null) {
+            return componentType.getComponentParentType().getId();
+        }
+        return null;
+    }
 }

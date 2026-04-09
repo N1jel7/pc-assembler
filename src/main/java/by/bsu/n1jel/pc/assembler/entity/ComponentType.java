@@ -17,6 +17,8 @@ public class ComponentType {
     @Column(name = "name", nullable = false)
     private String name;
 
+    @ToString.Exclude // TODO временно
     @OneToOne
+    @JoinColumn(name = "id")
     private ComponentType componentParentType;
 }

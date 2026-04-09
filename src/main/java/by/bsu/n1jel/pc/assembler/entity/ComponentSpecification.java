@@ -4,9 +4,11 @@ import by.bsu.n1jel.pc.assembler.entity.composite.ComponentSpecificationComposit
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
+import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Entity
+@Data
 @Builder
 @IdClass(ComponentSpecificationCompositeKey.class)
 @Table(name = "components_specifications")
