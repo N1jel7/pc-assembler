@@ -1,15 +1,17 @@
 package by.bsu.n1jel.pc.assembler.dto.response;
 
+import lombok.Data;
+
 import java.math.BigDecimal;
 import java.util.List;
 
-public record ComponentInfoResponseDto(
-        Long id,
-        String name,
-        Long producer,
-        Long componentType,
-        BigDecimal price,
-        Integer stockQuantity,
-        List<ComponentSpecificationInfoResponseDto> specifications
-) {
+@Data
+public class ComponentInfoResponseDto {
+        private Long id;
+        private String name;
+        private Long producer;
+        private Long componentType;
+        private BigDecimal price;
+        private Integer stockQuantity;
+        private List<SpecificationInfoResponseDto> specifications;
 }

@@ -1,12 +1,11 @@
 package by.bsu.n1jel.pc.assembler.mapper;
 
 import by.bsu.n1jel.pc.assembler.dto.request.SpecificationEditRequestDto;
-import by.bsu.n1jel.pc.assembler.dto.response.ComponentSpecificationInfoResponseDto;
-import by.bsu.n1jel.pc.assembler.dto.response.SpecificationInfoResponseDto;
-import by.bsu.n1jel.pc.assembler.entity.ComponentSpecification;
+import by.bsu.n1jel.pc.assembler.dto.request.SpecificationTypeEditRequestDto;
+import by.bsu.n1jel.pc.assembler.dto.response.SpecificationTypeInfoResponseDto;
 import by.bsu.n1jel.pc.assembler.entity.Specification;
+import by.bsu.n1jel.pc.assembler.entity.SpecificationType;
 import org.mapstruct.Mapper;
-import org.mapstruct.Mapping;
 import org.mapstruct.MappingConstants;
 import org.mapstruct.MappingTarget;
 
@@ -17,10 +16,15 @@ import static org.mapstruct.NullValuePropertyMappingStrategy.IGNORE;
 @Mapper(componentModel = MappingConstants.ComponentModel.SPRING, nullValuePropertyMappingStrategy = IGNORE)
 public interface SpecificationMapper {
 
+    SpecificationTypeInfoResponseDto mapToResponse(Specification specification);
+    
+    List<SpecificationTypeInfoResponseDto> mapToResponse(List<Specification> specifications);
 
-    SpecificationInfoResponseDto mapToResponse(Specification specification);
+    SpecificationTypeInfoResponseDto mapTypeToResponse(SpecificationType specification);
 
-    List<SpecificationInfoResponseDto> mapToResponse(List<Specification> specifications);
+    List<SpecificationTypeInfoResponseDto> mapTypeToResponse(List<SpecificationType> specifications);
 
     Specification updateSpecification(@MappingTarget Specification specification, SpecificationEditRequestDto requestDto);
+
+    SpecificationType updateSpecificationType(@MappingTarget SpecificationType specificationType, SpecificationTypeEditRequestDto requestDto);
 }

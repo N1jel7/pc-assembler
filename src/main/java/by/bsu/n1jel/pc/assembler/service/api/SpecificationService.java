@@ -1,20 +1,20 @@
 package by.bsu.n1jel.pc.assembler.service.api;
 
-import by.bsu.n1jel.pc.assembler.dto.request.SpecificationCreateRequestDto;
-import by.bsu.n1jel.pc.assembler.dto.request.SpecificationEditRequestDto;
-import by.bsu.n1jel.pc.assembler.dto.response.SpecificationInfoResponseDto;
+import by.bsu.n1jel.pc.assembler.dto.request.SpecificationTypeCreateRequestDto;
+import by.bsu.n1jel.pc.assembler.dto.request.SpecificationTypeEditRequestDto;
+import by.bsu.n1jel.pc.assembler.dto.response.SpecificationTypeInfoResponseDto;
 
 import java.util.List;
 
 public interface SpecificationService {
 
-    SpecificationInfoResponseDto getSpecificationById(Long specificationId);
+    SpecificationTypeInfoResponseDto getSpecificationTypeById(Long specificationId);
 
-    List<SpecificationInfoResponseDto> getAllSpecifications();
+    List<SpecificationTypeInfoResponseDto> getAllSpecificationTypes();
 
-    SpecificationInfoResponseDto createSpecification(SpecificationCreateRequestDto requestDto);
+    SpecificationTypeInfoResponseDto createSpecificationType(SpecificationTypeCreateRequestDto requestDto);
 
-    SpecificationInfoResponseDto editSpecification(SpecificationEditRequestDto requestDto);
+    SpecificationTypeInfoResponseDto editSpecificationType(SpecificationTypeEditRequestDto requestDto);
 
-    SpecificationInfoResponseDto deleteSpecificationById(Long specificationId);
+    SpecificationTypeInfoResponseDto deleteSpecificationTypeById(Long specificationId);
 }

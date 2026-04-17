@@ -1,6 +1,8 @@
 package by.bsu.n1jel.pc.assembler.entity.composite;
 
-import jakarta.persistence.Embeddable;
+import by.bsu.n1jel.pc.assembler.entity.Component;
+import by.bsu.n1jel.pc.assembler.entity.SpecificationType;
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -15,8 +17,10 @@ import java.io.Serializable;
 @AllArgsConstructor
 public class ComponentSpecificationCompositeKey implements Serializable {
 
-    private Long componentId;
+    @OneToOne
+    private Component component;
 
-    private Long specificationId;
+    @OneToOne
+    private SpecificationType specification;
 
 }

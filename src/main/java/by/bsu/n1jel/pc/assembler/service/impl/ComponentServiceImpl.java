@@ -3,12 +3,8 @@ package by.bsu.n1jel.pc.assembler.service.impl;
 import by.bsu.n1jel.pc.assembler.dto.request.*;
 import by.bsu.n1jel.pc.assembler.dto.response.ComponentInfoResponseDto;
 import by.bsu.n1jel.pc.assembler.entity.*;
-import by.bsu.n1jel.pc.assembler.entity.composite.ComponentSpecificationCompositeKey;
 import by.bsu.n1jel.pc.assembler.mapper.ComponentMapper;
-import by.bsu.n1jel.pc.assembler.repository.ComponentRepository;
-import by.bsu.n1jel.pc.assembler.repository.ComponentTypeRepository;
-import by.bsu.n1jel.pc.assembler.repository.ProducerRepository;
-import by.bsu.n1jel.pc.assembler.repository.SpecificationRepository;
+import by.bsu.n1jel.pc.assembler.repository.*;
 import by.bsu.n1jel.pc.assembler.service.api.ComponentService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -26,6 +22,7 @@ public class ComponentServiceImpl implements ComponentService {
     private final ComponentTypeRepository componentTypeRepository;
     private final ProducerRepository producerRepository;
     private final ComponentRepository componentRepository;
+    private final SpecificationTypeRepository specsTypeRepository;
     private final SpecificationRepository specsRepository;
     private final ComponentMapper componentMapper;
 
@@ -57,6 +54,13 @@ public class ComponentServiceImpl implements ComponentService {
                 );
     }
 
+    private SpecificationType findSpecificationTypeById(Long specificationTypeId) {
+        return specsTypeRepository.findById(specificationTypeId)
+                .orElseThrow(
+                        () -> specificationTypeNotFoundException(specificationTypeId)
+                );
+    }
+
     @Override
     @Transactional
     public ComponentInfoResponseDto createComponent(ComponentCreateRequestDto requestDto) {
@@ -75,20 +79,22 @@ public class ComponentServiceImpl implements ComponentService {
         createdComponent = componentRepository.save(createdComponent);
 
 
-        ArrayList<ComponentSpecification> createdSpecifications = new ArrayList<>();
+        List<Specification> createdSpecifications = new ArrayList<>();
 
-        for(ComponentSpecificationCreateRequestDto spec : requestDto.specifications()) {
-            createdSpecifications.add(
-                    new ComponentSpecification(
-                            createdComponent.getId(),
-                            spec.specificationId(),
-                            spec.value()));
+        for (SpecificationCreateRequestDto spec : requestDto.specifications()) {
+            createdSpecifications.add(Specification.builder()
+                    .type(findSpecificationTypeById(spec.specificationTypeId()))
+                    .component(createdComponent)
+                    .value(spec.value())
+                    .build());
+
         }
 
         createdComponent.setSpecifications(createdSpecifications);
 
         return componentMapper.mapToResponseDto(componentRepository.save(createdComponent));
     }
+
 
     @Override
     @Transactional(readOnly = true)
@@ -127,11 +133,11 @@ public class ComponentServiceImpl implements ComponentService {
             componentFromDb.setProducer(findProducerById(requestDto.producer()));
         }
 
-        if (requestDto.specifications() != null) {
+        /*if (requestDto.specifications() != null) {
             List<ComponentSpecification> componentSpecifications = componentFromDb.getSpecifications();
             requestDto.specifications().forEach(dtoSpec -> {
                 componentSpecifications.iterator().forEachRemaining(objectSpec -> {
-                    if (dtoSpec.specificationId().equals(objectSpec.getSpecificationId())) {
+                    if (dtoSpec.specificationTypeId().equals(objectSpec.getSpecificationId())) {
                         objectSpec.setValue(dtoSpec.value());
                     }
                 });
@@ -139,7 +145,7 @@ public class ComponentServiceImpl implements ComponentService {
 
             componentFromDb.setSpecifications(componentSpecifications);
 
-        }
+        }*/
         return componentFromDb;
     }
 

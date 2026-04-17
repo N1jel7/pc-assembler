@@ -6,12 +6,16 @@ import lombok.*;
 import java.math.BigDecimal;
 import java.util.List;
 
+/**
+ * Компонент
+ */
+
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@Data
 @Entity
 @Table(name = "components")
-@Data
 public class Component {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
@@ -33,8 +37,12 @@ public class Component {
     private Integer stockQuantity;
 
     @ToString.Exclude // TODO временно
-    @OneToMany(mappedBy = "componentId",fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-    private List<ComponentSpecification> specifications;
+    @OneToMany(cascade = CascadeType.ALL)
+    @JoinTable(
+            name = "components_specifications",
+            joinColumns = @JoinColumn(name = "component_id")
+    )
+    private List<Specification> specifications;
 
     @Column(name = "image_url")
     private String imageUrl;

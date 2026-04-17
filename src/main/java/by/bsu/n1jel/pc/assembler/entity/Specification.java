@@ -1,25 +1,34 @@
 package by.bsu.n1jel.pc.assembler.entity;
 
 import jakarta.persistence.*;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
-import java.util.List;
+/**
+ * Характеристика компонента
+ */
 
-@Data
 @Builder
-@Inheritance(strategy = InheritanceType.SINGLE_TABLE)
-@Entity
 @NoArgsConstructor
 @AllArgsConstructor
+@Data
+@Entity
+@Table(name = "specifications")
 public class Specification {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
 
-    @Column(name = "name", nullable = false)
-    private String name;
+    @ManyToOne(optional = false)
+    private SpecificationType type;
 
-    @Column(name = "description")
-    private String description;
+    @ManyToOne(optional = false)
+    private Component component;
+
+    @Column(name = "value", nullable = false)
+    private String value;
+
 }

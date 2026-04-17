@@ -1,11 +1,11 @@
 package by.bsu.n1jel.pc.assembler.service.impl;
 
-import by.bsu.n1jel.pc.assembler.dto.request.SpecificationCreateRequestDto;
-import by.bsu.n1jel.pc.assembler.dto.request.SpecificationEditRequestDto;
-import by.bsu.n1jel.pc.assembler.dto.response.SpecificationInfoResponseDto;
-import by.bsu.n1jel.pc.assembler.entity.Specification;
+import by.bsu.n1jel.pc.assembler.dto.request.SpecificationTypeCreateRequestDto;
+import by.bsu.n1jel.pc.assembler.dto.request.SpecificationTypeEditRequestDto;
+import by.bsu.n1jel.pc.assembler.dto.response.SpecificationTypeInfoResponseDto;
+import by.bsu.n1jel.pc.assembler.entity.SpecificationType;
 import by.bsu.n1jel.pc.assembler.mapper.SpecificationMapper;
-import by.bsu.n1jel.pc.assembler.repository.SpecificationRepository;
+import by.bsu.n1jel.pc.assembler.repository.SpecificationTypeRepository;
 import by.bsu.n1jel.pc.assembler.service.api.SpecificationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -13,36 +13,36 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
-import static by.bsu.n1jel.pc.assembler.exception.common.ResourceExceptionFactory.specificationNotFoundException;
+import static by.bsu.n1jel.pc.assembler.exception.common.ResourceExceptionFactory.specificationTypeNotFoundException;
 
 @Service
 @RequiredArgsConstructor
 public class SpecificationServiceImpl implements SpecificationService {
 
-    private final SpecificationRepository specsRepository;
+    private final SpecificationTypeRepository specsTypeRepository;
     private final SpecificationMapper specsMapper;
 
-    private Specification findSpecificationById(Long specificationId) {
-        return specsRepository.findById(specificationId)
+    private SpecificationType findSpecificationTypeById(Long specificationId) {
+        return specsTypeRepository.findById(specificationId)
                 .orElseThrow(
-                        () -> specificationNotFoundException(specificationId)
+                        () -> specificationTypeNotFoundException(specificationId)
                 );
     }
 
     @Override
-    public SpecificationInfoResponseDto getSpecificationById(Long specificationId) {
-        return specsMapper.mapToResponse(findSpecificationById(specificationId));
+    public SpecificationTypeInfoResponseDto getSpecificationTypeById(Long specificationId) {
+        return specsMapper.mapTypeToResponse(findSpecificationTypeById(specificationId));
     }
 
     @Override
-    public List<SpecificationInfoResponseDto> getAllSpecifications() {
-        return specsMapper.mapToResponse(specsRepository.findAll());
+    public List<SpecificationTypeInfoResponseDto> getAllSpecificationTypes() {
+        return specsMapper.mapTypeToResponse(specsTypeRepository.findAll());
     }
 
     @Override
     @Transactional
-    public SpecificationInfoResponseDto createSpecification(SpecificationCreateRequestDto requestDto) {
-        Specification specification = Specification.builder()
+    public SpecificationTypeInfoResponseDto createSpecificationType(SpecificationTypeCreateRequestDto requestDto) {
+        SpecificationType specification = SpecificationType.builder()
                 .name(requestDto.name())
                 .build();
 
@@ -50,23 +50,23 @@ public class SpecificationServiceImpl implements SpecificationService {
             specification.setDescription(requestDto.description());
         }
 
-        return specsMapper.mapToResponse(specsRepository.save(specification));
+        return specsMapper.mapTypeToResponse(specsTypeRepository.save(specification));
     }
 
     @Override
     @Transactional
-    public SpecificationInfoResponseDto editSpecification(SpecificationEditRequestDto requestDto) {
-        Specification specificationFromDb = findSpecificationById(requestDto.id());
-        specificationFromDb = specsMapper.updateSpecification(specificationFromDb, requestDto);
-        return specsMapper.mapToResponse(specsRepository.save(specificationFromDb));
+    public SpecificationTypeInfoResponseDto editSpecificationType(SpecificationTypeEditRequestDto requestDto) {
+        SpecificationType specificationFromDb = findSpecificationTypeById(requestDto.id());
+        specificationFromDb = specsMapper.updateSpecificationType(specificationFromDb, requestDto);
+        return specsMapper.mapTypeToResponse(specsTypeRepository.save(specificationFromDb));
     }
 
     @Override
     @Transactional
-    public SpecificationInfoResponseDto deleteSpecificationById(Long specificationId) {
-        Specification specificationFromDb = findSpecificationById(specificationId);
-        SpecificationInfoResponseDto responseDto = specsMapper.mapToResponse(specificationFromDb);
-        specsRepository.delete(specificationFromDb);
+    public SpecificationTypeInfoResponseDto deleteSpecificationTypeById(Long specificationId) {
+        SpecificationType specificationFromDb = findSpecificationTypeById(specificationId);
+        SpecificationTypeInfoResponseDto responseDto = specsMapper.mapTypeToResponse(specificationFromDb);
+        specsTypeRepository.delete(specificationFromDb);
         return responseDto;
     }
 }

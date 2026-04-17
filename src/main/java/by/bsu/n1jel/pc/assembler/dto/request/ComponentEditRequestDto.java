@@ -1,7 +1,6 @@
 package by.bsu.n1jel.pc.assembler.dto.request;
 
 import java.math.BigDecimal;
-import java.util.HashMap;
 import java.util.List;
 
 public record ComponentEditRequestDto(
@@ -11,6 +10,6 @@ public record ComponentEditRequestDto(
         Long componentType,
         BigDecimal price,
         Integer stockQuantity,
-        List<ComponentSpecificationEditRequestDto> specifications
+        List<SpecificationEditRequestDto> specifications
 ) {
 }
