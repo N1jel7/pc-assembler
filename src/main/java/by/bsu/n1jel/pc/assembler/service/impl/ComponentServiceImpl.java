@@ -66,11 +66,7 @@ public class ComponentServiceImpl implements ComponentService {
     public ComponentInfoResponseDto createComponent(ComponentCreateRequestDto requestDto) {
         Component createdComponent = Component.builder()
                 .name(requestDto.name())
-                .producer(
-                        Producer.builder()
-                                .id(requestDto.producer())
-                                .build()
-                )
+                .producer(findProducerById(requestDto.producer()))
                 .componentType(findComponentTypeById(requestDto.componentType()))
                 .price(requestDto.price())
                 .stockQuantity(requestDto.stockQuantity())
@@ -109,9 +105,16 @@ public class ComponentServiceImpl implements ComponentService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<ComponentInfoResponseDto> getComponentsByComponentType(Long componentTypeId) {
         ComponentType findableType = findComponentTypeById(componentTypeId);
-        return componentMapper.mapToResponseDto(componentRepository.findComponentsByComponentType(findableType));
+        List<Component> findableComponents = componentRepository.findComponentsByComponentType(findableType);
+
+        if(!findableComponents.isEmpty()) {
+            return componentMapper.mapToResponseDto(findableComponents);
+        }
+
+        return null;
     }
 
     @Override
@@ -133,19 +136,19 @@ public class ComponentServiceImpl implements ComponentService {
             componentFromDb.setProducer(findProducerById(requestDto.producer()));
         }
 
-        /*if (requestDto.specifications() != null) {
-            List<ComponentSpecification> componentSpecifications = componentFromDb.getSpecifications();
+        if (requestDto.specifications() != null) {
+            List<Specification> specifications = componentFromDb.getSpecifications();
             requestDto.specifications().forEach(dtoSpec -> {
-                componentSpecifications.iterator().forEachRemaining(objectSpec -> {
-                    if (dtoSpec.specificationTypeId().equals(objectSpec.getSpecificationId())) {
+                specifications.iterator().forEachRemaining(objectSpec -> {
+                    if (dtoSpec.id().equals(objectSpec.getId())) {
                         objectSpec.setValue(dtoSpec.value());
                     }
                 });
             });
 
-            componentFromDb.setSpecifications(componentSpecifications);
+            componentFromDb.setSpecifications(specifications);
 
-        }*/
+        }
         return componentFromDb;
     }
 
