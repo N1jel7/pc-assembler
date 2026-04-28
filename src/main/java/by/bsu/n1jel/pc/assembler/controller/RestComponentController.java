@@ -1,8 +1,12 @@
 package by.bsu.n1jel.pc.assembler.controller;
 
 
-import by.bsu.n1jel.pc.assembler.dto.request.*;
+import by.bsu.n1jel.pc.assembler.dto.request.create.ComponentCreateRequestDto;
+import by.bsu.n1jel.pc.assembler.dto.request.create.ComponentTypeCreateRequestDto;
+import by.bsu.n1jel.pc.assembler.dto.request.edit.ComponentEditRequestDto;
+import by.bsu.n1jel.pc.assembler.dto.request.edit.ComponentTypeEditRequestDto;
 import by.bsu.n1jel.pc.assembler.dto.response.ComponentInfoResponseDto;
+import by.bsu.n1jel.pc.assembler.dto.response.ComponentTypeInfoResponseDto;
 import by.bsu.n1jel.pc.assembler.service.api.ComponentService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
@@ -17,6 +21,7 @@ public class RestComponentController {
     private final ComponentService componentService;
 
     // COMPONENT ENDPOINTS
+
     @GetMapping()
     public List<ComponentInfoResponseDto> getAllComponents() {
         return componentService.getAllComponents();
@@ -48,6 +53,7 @@ public class RestComponentController {
     }
 
     // COMPONENT_TYPE ENDPOINTS
+
     @GetMapping("/types")
     List<ComponentTypeInfoResponseDto> getAllComponentTypes() {
         return componentService.getAllComponentTypes();

@@ -1,7 +1,7 @@
 package by.bsu.n1jel.pc.assembler.service.api;
 
-import by.bsu.n1jel.pc.assembler.dto.request.SpecificationTypeCreateRequestDto;
-import by.bsu.n1jel.pc.assembler.dto.request.SpecificationTypeEditRequestDto;
+import by.bsu.n1jel.pc.assembler.dto.request.create.SpecificationTypeCreateRequestDto;
+import by.bsu.n1jel.pc.assembler.dto.request.edit.SpecificationTypeEditRequestDto;
 import by.bsu.n1jel.pc.assembler.dto.response.SpecificationTypeInfoResponseDto;
 
 import java.util.List;

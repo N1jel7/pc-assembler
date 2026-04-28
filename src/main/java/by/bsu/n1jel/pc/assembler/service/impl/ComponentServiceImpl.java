@@ -1,7 +1,12 @@
 package by.bsu.n1jel.pc.assembler.service.impl;
 
-import by.bsu.n1jel.pc.assembler.dto.request.*;
+import by.bsu.n1jel.pc.assembler.dto.request.create.ComponentCreateRequestDto;
+import by.bsu.n1jel.pc.assembler.dto.request.create.ComponentTypeCreateRequestDto;
+import by.bsu.n1jel.pc.assembler.dto.request.create.SpecificationCreateRequestDto;
+import by.bsu.n1jel.pc.assembler.dto.request.edit.ComponentEditRequestDto;
+import by.bsu.n1jel.pc.assembler.dto.request.edit.ComponentTypeEditRequestDto;
 import by.bsu.n1jel.pc.assembler.dto.response.ComponentInfoResponseDto;
+import by.bsu.n1jel.pc.assembler.dto.response.ComponentTypeInfoResponseDto;
 import by.bsu.n1jel.pc.assembler.entity.*;
 import by.bsu.n1jel.pc.assembler.mapper.ComponentMapper;
 import by.bsu.n1jel.pc.assembler.repository.*;
@@ -179,8 +184,8 @@ public class ComponentServiceImpl implements ComponentService {
                 .name(requestDto.name())
                 .build();
 
-        if (requestDto.componentParentType() != null) {
-            createdComponentType.setComponentParentType(findComponentTypeById(requestDto.componentParentType()));
+        if (requestDto.parentType() != null) {
+            createdComponentType.setParentType(findComponentTypeById(requestDto.parentType()));
         }
         return componentMapper.mapToTypeResponseDto(componentTypeRepository.save(createdComponentType));
     }
@@ -191,8 +196,8 @@ public class ComponentServiceImpl implements ComponentService {
         ComponentType componentTypeFromDb = findComponentTypeById(requestDto.id());
         componentTypeFromDb = componentMapper.updateComponentType(componentTypeFromDb, requestDto);
 
-        if (requestDto.componentParentType() != null) {
-            componentTypeFromDb.setComponentParentType(findComponentTypeById(requestDto.componentParentType()));
+        if (requestDto.parentType() != null) {
+            componentTypeFromDb.setParentType(findComponentTypeById(requestDto.parentType()));
         }
 
         return componentMapper.mapToTypeResponseDto(componentTypeRepository.save(componentTypeFromDb));

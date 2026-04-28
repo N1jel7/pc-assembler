@@ -1,7 +1,7 @@
 package by.bsu.n1jel.pc.assembler.service.impl;
 
-import by.bsu.n1jel.pc.assembler.dto.request.ProducerCreateRequestDto;
-import by.bsu.n1jel.pc.assembler.dto.request.ProducerEditInfoRequestDto;
+import by.bsu.n1jel.pc.assembler.dto.request.create.ProducerCreateRequestDto;
+import by.bsu.n1jel.pc.assembler.dto.request.edit.ProducerEditInfoRequestDto;
 import by.bsu.n1jel.pc.assembler.dto.response.ProducerInfoResponseDto;
 import by.bsu.n1jel.pc.assembler.entity.Producer;
 import by.bsu.n1jel.pc.assembler.mapper.ProducerMapper;

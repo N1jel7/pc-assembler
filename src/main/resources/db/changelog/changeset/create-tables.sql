@@ -9,7 +9,7 @@ create sequence specifications_seq start with 1 increment by 50;
 create table build_partitions
 (
     quantity     integer not null,
-    build_id     bigint  not null,
+    build_id     bigint,
     component_id bigint  not null,
     id           bigint  not null,
     primary key (id)
@@ -27,6 +27,7 @@ create table component_types
 (
     id   bigint       not null,
     name varchar(255) not null,
+    parent_type bigint,
     primary key (id)
 );
 

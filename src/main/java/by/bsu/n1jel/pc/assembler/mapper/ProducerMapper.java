@@ -1,6 +1,6 @@
 package by.bsu.n1jel.pc.assembler.mapper;
 
-import by.bsu.n1jel.pc.assembler.dto.request.ProducerEditInfoRequestDto;
+import by.bsu.n1jel.pc.assembler.dto.request.edit.ProducerEditInfoRequestDto;
 import by.bsu.n1jel.pc.assembler.dto.response.ProducerInfoResponseDto;
 import by.bsu.n1jel.pc.assembler.entity.Producer;
 import org.mapstruct.Mapper;

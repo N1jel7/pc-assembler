@@ -14,7 +14,7 @@ public class BuildPartition {
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
 
-    @ManyToOne(optional = false)
+    @ManyToOne
     private Build build;
 
     @ManyToOne(optional = false)

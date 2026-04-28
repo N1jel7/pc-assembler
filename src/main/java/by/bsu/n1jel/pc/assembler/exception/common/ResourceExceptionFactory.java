@@ -10,6 +10,10 @@ public class ResourceExceptionFactory {
         return new ResourceNotFoundException(id, "Build id = %s not found".formatted(id));
     }
 
+    public static ResourceNotFoundException buildPartitionNotFoundException(Long id){
+        return new ResourceNotFoundException(id, "Build partition id = %s not found".formatted(id));
+    }
+
     public static ResourceNotFoundException componentNotFoundException(Long id){
         return new ResourceNotFoundException(id, "Component id = %s not found".formatted(id));
     }

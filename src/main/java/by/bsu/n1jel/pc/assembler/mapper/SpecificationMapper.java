@@ -1,7 +1,7 @@
 package by.bsu.n1jel.pc.assembler.mapper;
 
-import by.bsu.n1jel.pc.assembler.dto.request.SpecificationEditRequestDto;
-import by.bsu.n1jel.pc.assembler.dto.request.SpecificationTypeEditRequestDto;
+import by.bsu.n1jel.pc.assembler.dto.request.edit.SpecificationEditRequestDto;
+import by.bsu.n1jel.pc.assembler.dto.request.edit.SpecificationTypeEditRequestDto;
 import by.bsu.n1jel.pc.assembler.dto.response.SpecificationTypeInfoResponseDto;
 import by.bsu.n1jel.pc.assembler.entity.Specification;
 import by.bsu.n1jel.pc.assembler.entity.SpecificationType;

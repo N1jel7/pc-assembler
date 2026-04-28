@@ -1,8 +1,8 @@
 package by.bsu.n1jel.pc.assembler.mapper;
 
-import by.bsu.n1jel.pc.assembler.dto.request.ComponentEditRequestDto;
-import by.bsu.n1jel.pc.assembler.dto.request.ComponentTypeEditRequestDto;
-import by.bsu.n1jel.pc.assembler.dto.request.ComponentTypeInfoResponseDto;
+import by.bsu.n1jel.pc.assembler.dto.request.edit.ComponentEditRequestDto;
+import by.bsu.n1jel.pc.assembler.dto.request.edit.ComponentTypeEditRequestDto;
+import by.bsu.n1jel.pc.assembler.dto.response.ComponentTypeInfoResponseDto;
 import by.bsu.n1jel.pc.assembler.dto.response.ComponentInfoResponseDto;
 import by.bsu.n1jel.pc.assembler.dto.response.SpecificationInfoResponseDto;
 import by.bsu.n1jel.pc.assembler.entity.Component;
@@ -26,7 +26,7 @@ public interface ComponentMapper {
 
     List<ComponentInfoResponseDto> mapToResponseDto(List<Component> components);
 
-    @Mapping(target = "componentParentType", source = "componentType", qualifiedByName = "getComponentParentTypeId")
+    @Mapping(target = "parentType", source = "componentType", qualifiedByName = "getComponentParentTypeId")
     ComponentTypeInfoResponseDto mapToTypeResponseDto(ComponentType componentType);
 
     List<ComponentTypeInfoResponseDto> mapToTypeResponseDto(List<ComponentType> componentTypes);
@@ -36,7 +36,7 @@ public interface ComponentMapper {
     @Mapping(target = "specifications", ignore = true)
     Component updateComponent(@MappingTarget Component component, ComponentEditRequestDto requestDto);
 
-    @Mapping(target = "componentParentType", ignore = true)
+    @Mapping(target = "parentType", ignore = true)
     ComponentType updateComponentType(@MappingTarget ComponentType componentType, ComponentTypeEditRequestDto requestDto);
 
     @Named("getSpecificationInfoResponseDtoList")
@@ -69,8 +69,8 @@ public interface ComponentMapper {
 
     @Named("getComponentParentTypeId")
     default Long getComponentParentTypeId(ComponentType componentType) {
-        if (componentType.getComponentParentType() != null) {
-            return componentType.getComponentParentType().getId();
+        if (componentType.getParentType() != null) {
+            return componentType.getParentType().getId();
         }
         return null;
     }

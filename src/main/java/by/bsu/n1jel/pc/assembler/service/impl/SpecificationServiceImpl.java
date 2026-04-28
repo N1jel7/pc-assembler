@@ -1,7 +1,7 @@
 package by.bsu.n1jel.pc.assembler.service.impl;
 
-import by.bsu.n1jel.pc.assembler.dto.request.SpecificationTypeCreateRequestDto;
-import by.bsu.n1jel.pc.assembler.dto.request.SpecificationTypeEditRequestDto;
+import by.bsu.n1jel.pc.assembler.dto.request.create.SpecificationTypeCreateRequestDto;
+import by.bsu.n1jel.pc.assembler.dto.request.edit.SpecificationTypeEditRequestDto;
 import by.bsu.n1jel.pc.assembler.dto.response.SpecificationTypeInfoResponseDto;
 import by.bsu.n1jel.pc.assembler.entity.SpecificationType;
 import by.bsu.n1jel.pc.assembler.mapper.SpecificationMapper;
