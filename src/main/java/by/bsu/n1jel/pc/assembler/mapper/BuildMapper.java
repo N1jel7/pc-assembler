@@ -27,10 +27,14 @@ public interface BuildMapper {
 
     Build update(@MappingTarget Build build, BuildEditRequestDto requestDto);
 
+    @Mapping(target = "id", ignore = true)
     @Mapping(target = "build", ignore = true)
     @Mapping(target = "component", ignore = true)
     @Mapping(source = "quantity", target = "quantity")
     BuildPartition updatePartition(@MappingTarget BuildPartition buildPartition, BuildPartitionEditRequestDto requestDto);
+
+    @Mapping(target = "id", ignore = true)
+    Build updateBuild(@MappingTarget Build build, BuildEditRequestDto requestDto);
 
     @Named("getBuildId")
     default Long getBuildId(Build build) {

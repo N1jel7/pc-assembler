@@ -14,7 +14,7 @@ public class BuildPartition {
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
 
-    @ManyToOne
+    @ManyToOne(cascade = CascadeType.ALL)
     private Build build;
 
     @ManyToOne(optional = false)

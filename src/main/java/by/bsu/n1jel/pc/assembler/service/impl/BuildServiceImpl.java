@@ -16,7 +16,9 @@ import by.bsu.n1jel.pc.assembler.repository.ComponentRepository;
 import by.bsu.n1jel.pc.assembler.service.api.BuildService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.sql.Timestamp;
 import java.util.List;
 
 import static by.bsu.n1jel.pc.assembler.exception.common.ResourceExceptionFactory.*;
@@ -37,6 +39,10 @@ public class BuildServiceImpl implements BuildService {
                 );
     }
 
+    private List<BuildPartition> findBuildPartitionsByIds(List<Long> ids) {
+        return ids.stream().map(this::findBuildPartitionById).toList();
+    }
+
     private Build findBuildById(Long buildId) {
         return buildRepository.findById(buildId)
                 .orElseThrow(
@@ -51,29 +57,43 @@ public class BuildServiceImpl implements BuildService {
                 );
     }
 
+
     @Override
     public List<BuildInfoResponseDto> getAllBuilds() {
         return buildMapper.mapToResponseDto(buildRepository.findAll());
     }
 
     @Override
+    @Transactional
     public BuildInfoResponseDto createBuild(BuildCreateRequestDto requestDto) {
-        return null;
+        Build createdBuild = Build.builder()
+                .buildPartitions(findBuildPartitionsByIds(requestDto.buildPartitionIds()))
+                .name(requestDto.name())
+                .build();
+
+        return buildMapper.mapToResponseDto(buildRepository.save(createdBuild));
     }
 
     @Override
     public BuildInfoResponseDto getBuildById(Long buildId) {
-        return null;
+        return buildMapper.mapToResponseDto(findBuildById(buildId));
     }
 
     @Override
+    @Transactional
     public BuildInfoResponseDto editBuildInfo(BuildEditRequestDto requestDto) {
-        return null;
+        Build buildFromDb = findBuildById(requestDto.id());
+        buildMapper.updateBuild(buildFromDb, requestDto);
+        return buildMapper.mapToResponseDto(buildRepository.save(buildFromDb));
     }
 
     @Override
+    @Transactional
     public BuildInfoResponseDto deleteBuildById(Long buildId) {
-        return null;
+        Build buildFromDb = findBuildById(buildId);
+        BuildInfoResponseDto responseDto = buildMapper.mapToResponseDto(buildFromDb);
+        buildRepository.delete(buildFromDb);
+        return responseDto;
     }
 
     @Override
@@ -87,6 +107,7 @@ public class BuildServiceImpl implements BuildService {
     }
 
     @Override
+    @Transactional
     public BuildPartitionInfoResponseDto createBuildPartition(BuildPartitionCreateRequestDto requestDto) {
 
         BuildPartition createdBuildPartition = BuildPartition.builder()
@@ -98,15 +119,25 @@ public class BuildServiceImpl implements BuildService {
     }
 
     @Override
+    @Transactional
     public BuildPartitionInfoResponseDto editBuildPartitionInfo(BuildPartitionEditRequestDto requestDto) {
         BuildPartition buildPartitionFromDb = findBuildPartitionById(requestDto.buildId());
         buildPartitionFromDb = buildMapper.updatePartition(buildPartitionFromDb, requestDto);
-        editDifficultData(buildPartitionFromDb, requestDto);
+        editDifficultBuildPartitionInfo(buildPartitionFromDb, requestDto);
 
         return buildMapper.mapToPartitionResponseDto(partitionRepository.save(buildPartitionFromDb));
     }
 
-    private void editDifficultData(BuildPartition buildPartition, BuildPartitionEditRequestDto requestDto) {
+    @Override
+    @Transactional
+    public BuildPartitionInfoResponseDto deleteBuildPartitionById(Long buildPartitionId) {
+        BuildPartition buildPartitionFromDb = findBuildPartitionById(buildPartitionId);
+        BuildPartitionInfoResponseDto responseDto = buildMapper.mapToPartitionResponseDto(buildPartitionFromDb);
+        partitionRepository.delete(buildPartitionFromDb);
+        return responseDto;
+    }
+
+    private void editDifficultBuildPartitionInfo(BuildPartition buildPartition, BuildPartitionEditRequestDto requestDto) {
 
         if (requestDto.buildId() != null) {
             buildPartition.setBuild(findBuildById(requestDto.buildId()));
@@ -116,13 +147,5 @@ public class BuildServiceImpl implements BuildService {
             buildPartition.setComponent(findComponentById(requestDto.componentId()));
         }
 
-    }
-
-    @Override
-    public BuildPartitionInfoResponseDto deleteBuildPartitionById(Long buildPartitionId) {
-        BuildPartition buildPartitionFromDb = findBuildPartitionById(buildPartitionId);
-        BuildPartitionInfoResponseDto responseDto = buildMapper.mapToPartitionResponseDto(buildPartitionFromDb);
-        partitionRepository.delete(buildPartitionFromDb);
-        return responseDto;
     }
 }

@@ -1,5 +1,10 @@
 package by.bsu.n1jel.pc.assembler.dto.request.create;
 
-public record BuildCreateRequestDto() {
+import java.util.List;
+
+public record BuildCreateRequestDto(
+        List<Long> buildPartitionIds,
+        String name
+) {
 
 }
