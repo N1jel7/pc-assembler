@@ -14,9 +14,11 @@ public class BuildPartition {
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
 
-    @ManyToOne
+    @ToString.Exclude // TODO временно
+    @ManyToOne(cascade = CascadeType.ALL)
     private Build build;
 
+    @ToString.Exclude // TODO временно
     @ManyToOne(optional = false)
     private Component component;
 

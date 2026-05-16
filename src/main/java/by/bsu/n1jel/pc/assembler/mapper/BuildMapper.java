@@ -14,23 +14,27 @@ import java.util.List;
 @Mapper(componentModel = MappingConstants.ComponentModel.SPRING)
 public interface BuildMapper {
 
+    @Mapping(target = "partitions", source = "buildPartitions")
+    @Mapping(target = "buildId", source = "id")
     BuildInfoResponseDto mapToResponseDto(Build build);
 
     List<BuildInfoResponseDto> mapToResponseDto(List<Build> builds);
 
     @Mapping(target = "buildId", source = "build", qualifiedByName = "getBuildId")
     @Mapping(target = "componentId", source = "component", qualifiedByName = "getComponentId")
-    @Mapping(target = "partitionId", source = "id")
+    @Mapping(target = "buildPartitionId", source = "id")
     BuildPartitionInfoResponseDto mapToPartitionResponseDto(BuildPartition buildPartition);
 
     List<BuildPartitionInfoResponseDto> mapToPartitionResponseDto(List<BuildPartition> buildPartitions);
 
-    Build update(@MappingTarget Build build, BuildEditRequestDto requestDto);
-
+    @Mapping(target = "id", ignore = true)
     @Mapping(target = "build", ignore = true)
     @Mapping(target = "component", ignore = true)
     @Mapping(source = "quantity", target = "quantity")
     BuildPartition updatePartition(@MappingTarget BuildPartition buildPartition, BuildPartitionEditRequestDto requestDto);
+
+    @Mapping(target = "id", ignore = true)
+    Build updateBuild(@MappingTarget Build build, BuildEditRequestDto requestDto);
 
     @Named("getBuildId")
     default Long getBuildId(Build build) {
