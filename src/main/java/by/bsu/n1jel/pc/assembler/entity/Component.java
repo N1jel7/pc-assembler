@@ -24,9 +24,11 @@ public class Component {
     @Column(name = "name", nullable = false)
     private String name;
 
+    @ToString.Exclude // TODO временно
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     private Producer producer;
 
+    @ToString.Exclude // TODO временно
     @ManyToOne(optional = false)
     private ComponentType componentType;
 

@@ -18,7 +18,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.sql.Timestamp;
 import java.util.List;
 
 import static by.bsu.n1jel.pc.assembler.exception.common.ResourceExceptionFactory.*;
@@ -59,6 +58,7 @@ public class BuildServiceImpl implements BuildService {
 
 
     @Override
+    @Transactional(readOnly = true)
     public List<BuildInfoResponseDto> getAllBuilds() {
         return buildMapper.mapToResponseDto(buildRepository.findAll());
     }
@@ -67,7 +67,6 @@ public class BuildServiceImpl implements BuildService {
     @Transactional
     public BuildInfoResponseDto createBuild(BuildCreateRequestDto requestDto) {
         Build createdBuild = Build.builder()
-                .buildPartitions(findBuildPartitionsByIds(requestDto.buildPartitionIds()))
                 .name(requestDto.name())
                 .build();
 
@@ -75,6 +74,7 @@ public class BuildServiceImpl implements BuildService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public BuildInfoResponseDto getBuildById(Long buildId) {
         return buildMapper.mapToResponseDto(findBuildById(buildId));
     }
@@ -82,7 +82,7 @@ public class BuildServiceImpl implements BuildService {
     @Override
     @Transactional
     public BuildInfoResponseDto editBuildInfo(BuildEditRequestDto requestDto) {
-        Build buildFromDb = findBuildById(requestDto.id());
+        Build buildFromDb = findBuildById(requestDto.buildId());
         buildMapper.updateBuild(buildFromDb, requestDto);
         return buildMapper.mapToResponseDto(buildRepository.save(buildFromDb));
     }
@@ -112,6 +112,7 @@ public class BuildServiceImpl implements BuildService {
 
         BuildPartition createdBuildPartition = BuildPartition.builder()
                 .component(findComponentById(requestDto.componentId()))
+                .build(findBuildById(requestDto.buildId()))
                 .quantity(requestDto.quantity())
                 .build();
 
@@ -121,7 +122,7 @@ public class BuildServiceImpl implements BuildService {
     @Override
     @Transactional
     public BuildPartitionInfoResponseDto editBuildPartitionInfo(BuildPartitionEditRequestDto requestDto) {
-        BuildPartition buildPartitionFromDb = findBuildPartitionById(requestDto.buildId());
+        BuildPartition buildPartitionFromDb = findBuildPartitionById(requestDto.buildPartitionId());
         buildPartitionFromDb = buildMapper.updatePartition(buildPartitionFromDb, requestDto);
         editDifficultBuildPartitionInfo(buildPartitionFromDb, requestDto);
 
@@ -139,8 +140,8 @@ public class BuildServiceImpl implements BuildService {
 
     private void editDifficultBuildPartitionInfo(BuildPartition buildPartition, BuildPartitionEditRequestDto requestDto) {
 
-        if (requestDto.buildId() != null) {
-            buildPartition.setBuild(findBuildById(requestDto.buildId()));
+        if (requestDto.buildPartitionId() != null) {
+            buildPartition.setBuild(findBuildById(requestDto.buildPartitionId()));
         }
 
         if (requestDto.componentId() != null) {

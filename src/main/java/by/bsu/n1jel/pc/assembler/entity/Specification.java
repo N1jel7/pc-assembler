@@ -1,10 +1,7 @@
 package by.bsu.n1jel.pc.assembler.entity;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 /**
  * Характеристика компонента
@@ -22,9 +19,11 @@ public class Specification {
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
 
+    @ToString.Exclude // TODO временно
     @ManyToOne(optional = false)
     private SpecificationType type;
 
+    @ToString.Exclude // TODO временно
     @ManyToOne(optional = false)
     private Component component;
 

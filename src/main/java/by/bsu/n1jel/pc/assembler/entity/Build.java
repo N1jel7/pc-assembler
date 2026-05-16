@@ -18,6 +18,7 @@ public class Build {
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
 
+    @ToString.Exclude // TODO временно
     @OneToMany(mappedBy = "build", cascade = {CascadeType.PERSIST, CascadeType.REFRESH}, fetch = FetchType.LAZY)
     private List<BuildPartition> buildPartitions;
 
