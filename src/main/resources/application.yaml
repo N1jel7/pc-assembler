@@ -10,3 +10,6 @@ spring:
 logging:
   level:
     sql: debug
+springdoc:
+  swagger-ui:
+    document-title: PC Assembler API

@@ -38,10 +38,6 @@ public class BuildServiceImpl implements BuildService {
                 );
     }
 
-    private List<BuildPartition> findBuildPartitionsByIds(List<Long> ids) {
-        return ids.stream().map(this::findBuildPartitionById).toList();
-    }
-
     private Build findBuildById(Long buildId) {
         return buildRepository.findById(buildId)
                 .orElseThrow(
