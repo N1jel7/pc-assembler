@@ -10,3 +10,9 @@ spring:
 logging:
   level:
     sql: debug
+
+## env
+minio:
+  root:
+    user: ${MINIO_ROOT_USER}
+    password: ${MINIO_ROOT_PASSWORD}
