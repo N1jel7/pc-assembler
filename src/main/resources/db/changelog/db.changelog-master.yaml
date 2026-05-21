@@ -3,3 +3,5 @@ databaseChangeLog:
       file: db/changelog/changeset/v1/create-tables.sql
   - include:
       file: db/changelog/changeset/v2/image-entity.sql
+  - include:
+      file: db/changelog/changeset/v2/test-data.sql
