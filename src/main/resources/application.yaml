@@ -13,7 +13,8 @@ logging:
 springdoc:
   swagger-ui:
     document-title: PC Assembler API
-## env
+
+## Properties
 minio:
   root:
     user: ${MINIO_ROOT_USER}

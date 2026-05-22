@@ -6,10 +6,17 @@ import by.bsu.n1jel.pc.assembler.dto.request.edit.ComponentEditRequestDto;
 import by.bsu.n1jel.pc.assembler.dto.request.edit.ComponentTypeEditRequestDto;
 import by.bsu.n1jel.pc.assembler.dto.response.ComponentInfoResponseDto;
 import by.bsu.n1jel.pc.assembler.dto.response.ComponentTypeInfoResponseDto;
+import by.bsu.n1jel.pc.assembler.dto.request.search.ComponentSearchFilterRequestDto;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 import java.util.List;
 
 public interface ComponentService {
+
+    // SEARCH
+
+    Page<ComponentInfoResponseDto> findComponentsBySearchFilter(ComponentSearchFilterRequestDto requestDto, Pageable pageable);
 
     // COMPONENTS
 

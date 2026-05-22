@@ -7,10 +7,13 @@ import by.bsu.n1jel.pc.assembler.dto.request.edit.ComponentEditRequestDto;
 import by.bsu.n1jel.pc.assembler.dto.request.edit.ComponentTypeEditRequestDto;
 import by.bsu.n1jel.pc.assembler.dto.response.ComponentInfoResponseDto;
 import by.bsu.n1jel.pc.assembler.dto.response.ComponentTypeInfoResponseDto;
+import by.bsu.n1jel.pc.assembler.dto.request.search.ComponentSearchFilterRequestDto;
 import by.bsu.n1jel.pc.assembler.service.api.ComponentService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -21,7 +24,20 @@ import java.util.List;
 @RequestMapping("api/v1/components")
 public class RestComponentController {
 
+    private static final Integer PAGE_SIZE = 10;
+
     private final ComponentService componentService;
+
+    // SEARCH
+
+    @Operation(
+            summary = "Search components",
+            description = "Return components that suitable request parameters"
+    )
+    @PostMapping("/search/{page}")
+    public Page<ComponentInfoResponseDto> searchByFilter(@RequestBody ComponentSearchFilterRequestDto requestDto, @PathVariable Integer page) {
+        return componentService.findComponentsBySearchFilter(requestDto, PageRequest.of(--page, PAGE_SIZE));
+    }
 
     // COMPONENT ENDPOINTS
 

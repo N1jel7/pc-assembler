@@ -1,5 +1,6 @@
 package by.bsu.n1jel.pc.assembler.service.impl;
 
+import by.bsu.n1jel.pc.assembler.dao.SearchDao;
 import by.bsu.n1jel.pc.assembler.dto.request.create.ComponentCreateRequestDto;
 import by.bsu.n1jel.pc.assembler.dto.request.create.ComponentTypeCreateRequestDto;
 import by.bsu.n1jel.pc.assembler.dto.request.create.SpecificationCreateRequestDto;
@@ -7,11 +8,14 @@ import by.bsu.n1jel.pc.assembler.dto.request.edit.ComponentEditRequestDto;
 import by.bsu.n1jel.pc.assembler.dto.request.edit.ComponentTypeEditRequestDto;
 import by.bsu.n1jel.pc.assembler.dto.response.ComponentInfoResponseDto;
 import by.bsu.n1jel.pc.assembler.dto.response.ComponentTypeInfoResponseDto;
+import by.bsu.n1jel.pc.assembler.dto.request.search.ComponentSearchFilterRequestDto;
 import by.bsu.n1jel.pc.assembler.entity.*;
 import by.bsu.n1jel.pc.assembler.mapper.ComponentMapper;
 import by.bsu.n1jel.pc.assembler.repository.*;
 import by.bsu.n1jel.pc.assembler.service.api.ComponentService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -30,6 +34,7 @@ public class ComponentServiceImpl implements ComponentService {
     private final SpecificationTypeRepository specsTypeRepository;
     private final SpecificationRepository specsRepository;
     private final ComponentMapper componentMapper;
+    private final SearchDao searchDao;
 
     private Component findComponentById(Long componentId) {
         return componentRepository.findById(componentId)
@@ -96,6 +101,13 @@ public class ComponentServiceImpl implements ComponentService {
         return componentMapper.mapToResponseDto(componentRepository.save(createdComponent));
     }
 
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<ComponentInfoResponseDto> findComponentsBySearchFilter(ComponentSearchFilterRequestDto requestDto, Pageable pageable) {
+        Page<Component> componentPage = searchDao.searchComponents(requestDto, pageable);
+        return componentPage.map(componentMapper::mapToResponseDto);
+    }
 
     @Override
     @Transactional(readOnly = true)
