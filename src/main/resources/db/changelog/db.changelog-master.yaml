@@ -5,3 +5,5 @@ databaseChangeLog:
       file: db/changelog/changeset/v2/image-entity.sql
   - include:
       file: db/changelog/changeset/v2/test-data.sql
+  - include:
+      file: db/changelog/changeset/v3/calculate_build_cost_function.sql
