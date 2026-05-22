@@ -1,10 +1,14 @@
 package by.bsu.n1jel.pc.assembler.dto.response;
 
+import lombok.Data;
+
 import java.util.List;
 
-public record BuildInfoResponseDto(
-        Long buildId,
-        String name,
-        List<BuildPartitionInfoResponseDto> partitions
-) {
+@Data
+public class BuildInfoResponseDto{
+    private Long buildId;
+    private String name;
+    private String price;
+    private String creationDate;
+    private List<BuildPartitionInfoResponseDto> partitions;
 }

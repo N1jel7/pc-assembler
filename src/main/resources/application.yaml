@@ -10,6 +10,9 @@ spring:
 logging:
   level:
     sql: debug
-springdoc:
-  swagger-ui:
-    document-title: PC Assembler API
+
+## env
+minio:
+  root:
+    user: ${MINIO_ROOT_USER}
+    password: ${MINIO_ROOT_PASSWORD}

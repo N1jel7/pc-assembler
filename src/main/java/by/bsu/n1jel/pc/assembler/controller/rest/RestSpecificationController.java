@@ -1,4 +1,4 @@
-package by.bsu.n1jel.pc.assembler.controller;
+package by.bsu.n1jel.pc.assembler.controller.rest;
 
 import by.bsu.n1jel.pc.assembler.dto.request.create.SpecificationTypeCreateRequestDto;
 import by.bsu.n1jel.pc.assembler.dto.request.edit.SpecificationTypeEditRequestDto;

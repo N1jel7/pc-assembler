@@ -9,7 +9,7 @@ create sequence specifications_seq start with 1 increment by 50;
 create table build_partitions
 (
     quantity     integer not null,
-    build_id     bigint,
+    build_id     bigint not null,
     component_id bigint  not null,
     id           bigint  not null,
     primary key (id)
@@ -71,23 +71,23 @@ create table specifications
     component_id bigint,
     id           bigint not null,
     type_id      bigint,
-    value        varchar(255),
+    value        varchar(255) not null,
     primary key (id)
 );
 
 alter table if exists build_partitions
-    add constraint FKk5q5ajlyk6j66tywov15vexrl foreign key (build_id) references builds;
+    add constraint fK_bpart_b foreign key (build_id) references builds;
 alter table if exists build_partitions
-    add constraint FKi97t5a8qu7e9td5erog5qsjyd foreign key (component_id) references components;
+    add constraint fK_bpart_comp foreign key (component_id) references components;
 alter table if exists components
-    add constraint FK51j4a15w7but5ck8mdt7962lc foreign key (component_type_id) references component_types;
+    add constraint fk_comp_comptype foreign key (component_type_id) references component_types;
 alter table if exists components
-    add constraint FK7uayu0i89y1xkstbb63r2cp0r foreign key (producer_id) references producers;
+    add constraint fk_comp_prod foreign key (producer_id) references producers;
 alter table if exists components_specifications
-    add constraint FK3ortmt1rt68py34wfse8pjefx foreign key (specifications_id) references specifications;
+    add constraint fk_compspec_spec foreign key (specifications_id) references specifications;
 alter table if exists components_specifications
-    add constraint FK9xc2qgjw7yysnyng381ee6s92 foreign key (component_id) references components;
+    add constraint fk_compspec_comp foreign key (component_id) references components;
 alter table if exists specifications
-    add constraint FKdd03kj7pf8xcay7v33meeg41o foreign key (component_id) references components;
+    add constraint fk_spec_comp foreign key (component_id) references components;
 alter table if exists specifications
-    add constraint FK45wxoyhjmtvikyvygqlwet56g foreign key (type_id) references specification_types
+    add constraint fk_spec_spectype foreign key (type_id) references specification_types

@@ -7,11 +7,13 @@ import by.bsu.n1jel.pc.assembler.dto.response.BuildPartitionInfoResponseDto;
 import by.bsu.n1jel.pc.assembler.entity.Build;
 import by.bsu.n1jel.pc.assembler.entity.BuildPartition;
 import by.bsu.n1jel.pc.assembler.entity.Component;
+import by.bsu.n1jel.pc.assembler.mapper.decorator.BuildMapperDecorator;
 import org.mapstruct.*;
 
 import java.util.List;
 
 @Mapper(componentModel = MappingConstants.ComponentModel.SPRING)
+@DecoratedWith(BuildMapperDecorator.class)
 public interface BuildMapper {
 
     @Mapping(target = "partitions", source = "buildPartitions")
@@ -38,7 +40,7 @@ public interface BuildMapper {
 
     @Named("getBuildId")
     default Long getBuildId(Build build) {
-        if(build != null) {
+        if (build != null) {
             return build.getId();
         }
         return null;
@@ -46,7 +48,7 @@ public interface BuildMapper {
 
     @Named("getComponentId")
     default Long getComponentId(Component component) {
-        if(component != null) {
+        if (component != null) {
             return component.getId();
         }
         return null;

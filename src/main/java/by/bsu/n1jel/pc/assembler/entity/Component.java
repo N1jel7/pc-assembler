@@ -46,6 +46,11 @@ public class Component {
     )
     private List<Specification> specifications;
 
-    @Column(name = "image_url")
-    private String imageUrl;
+    @OneToMany(cascade = CascadeType.ALL)
+    @JoinTable(
+            name = "components_images",
+            joinColumns = @JoinColumn(name = "component_id"),
+            inverseJoinColumns = @JoinColumn(name = "image_id")
+    )
+    private List<Image> images;
 }
