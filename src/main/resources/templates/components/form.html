@@ -1,0 +1,182 @@
+<!doctype html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org" th:attr="data-page=${activePage}">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title th:text="${pageTitle}">Компонент</title>
+  <link rel="stylesheet" th:href="@{/assets/css/styles.css}">
+</head>
+<body>
+<div th:replace="~{fragments/header :: header(${activePage})}"></div>
+
+<main class="container page-shell">
+  <section class="page-hero">
+    <div>
+      <p class="eyebrow" th:text="${mode == 'create' ? 'Создание' : 'Редактирование'}">Создание</p>
+      <h1 th:text="${pageTitle}">Создать компонент</h1>
+      <p>Файлы загружаются отдельно от стилизованного аватара.</p>
+    </div>
+
+    <div class="header-actions">
+      <a class="button button--ghost" th:href="@{/components}">← Назад</a>
+
+      <form th:if="${mode == 'edit'}"
+            th:action="@{'/components/' + ${component.id} + '/delete'}"
+            method="post">
+        <button class="button button--danger" type="submit"
+                onclick="return confirm('Удалить компонент?')">Удалить</button>
+      </form>
+    </div>
+  </section>
+
+  <form class="form-grid"
+        th:object="${component}"
+        th:attr="action=${mode == 'create' ? '/components/create' : '/components/' + component.id + '/edit'}"
+        method="post"
+        enctype="multipart/form-data">
+
+    <section class="panel">
+      <div class="panel__head">
+        <div>
+          <h2 class="panel__title">Поля компонента</h2>
+          <p class="panel__subtitle">Все данные отправляются одной формой.</p>
+        </div>
+      </div>
+
+      <div class="panel__body form">
+        <div class="field">
+          <label for="component-name">Название</label>
+          <input class="input" id="component-name" type="text" th:field="*{name}" required>
+        </div>
+
+        <div class="field">
+          <label for="component-producer">Производитель</label>
+          <select class="select" id="component-producer" th:field="*{producerId}" required>
+            <option value="">Выбери производителя</option>
+            <option th:each="producer : ${producers}"
+                    th:value="${producer.id}"
+                    th:text="${producer.name + ' — ' + producer.country}">
+            </option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="component-type">Тип компонента</label>
+          <select class="select" id="component-type" th:field="*{componentTypeId}" required>
+            <option value="">Выбери тип</option>
+            <option th:each="type : ${componentTypes}"
+                    th:value="${type.id()}"
+                    th:text="${type.name()}">
+            </option>
+          </select>
+        </div>
+
+        <div class="detail-grid">
+          <div class="field">
+            <label for="component-price">Цена</label>
+            <input class="input" id="component-price" type="number" min="0" step="1" th:field="*{price}" required>
+          </div>
+          <div class="field">
+            <label for="component-stock">Количество на складе</label>
+            <input class="input" id="component-stock" type="number" min="0" step="1" th:field="*{stockQuantity}" required>
+          </div>
+        </div>
+
+        <div class="panel component-spec-box" style="padding:16px;">
+          <div class="upload-section__head">
+            <div>
+              <h3 class="panel__title" style="font-size:1.05rem; margin:0;">Характеристики</h3>
+              <div class="upload-hint upload-hint--spaced">
+                Название характеристики выбирается из списка.
+              </div>
+            </div>
+          </div>
+
+          <div id="component-spec-list" class="editor">
+            <div class="editor-row js-spec-row" th:each="spec, stat : *{specifications}">
+              <select class="select" th:field="*{specifications[__${stat.index}__].specificationTypeId}">
+                <option value="">Выбери характеристику</option>
+                <option th:each="stype : ${specificationTypes}"
+                        th:value="${stype.id()}"
+                        th:text="${stype.name()}"
+                        th:selected="${spec.id != null and spec.id == stype.id()}">
+                </option>
+              </select>
+
+              <input class="input" type="text"
+                     th:field="*{specifications[__${stat.index}__].value}"
+                     placeholder="Значение">
+
+              <button type="button" class="button button--danger button--sm js-remove-spec">Удалить</button>
+            </div>
+          </div>
+
+          <template id="component-spec-template">
+            <div class="editor-row js-spec-row">
+              <select class="select" name="specifications[__INDEX__].id">
+                <option value="">Выбери характеристику</option>
+                <option th:each="stype : ${specificationTypes}"
+                        th:value="${stype.id()}"
+                        th:text="${stype.name()}">
+                </option>
+              </select>
+
+              <input class="input" type="text" name="specifications[__INDEX__].value" placeholder="Значение">
+
+              <button type="button" class="button button--danger button--sm js-remove-spec">Удалить</button>
+            </div>
+          </template>
+
+          <div class="form-actions">
+            <button class="button button--ghost button--sm" type="button" id="component-spec-add">+ Добавить характеристику</button>
+          </div>
+        </div>
+
+        <div class="form-actions">
+          <button class="button button--primary" type="submit">Сохранить</button>
+          <a class="button button--ghost" th:href="@{/components}">Отмена</a>
+        </div>
+      </div>
+    </section>
+
+    <aside class="panel">
+      <div class="panel__head">
+        <div>
+          <h2 class="panel__title">Предпросмотр</h2>
+          <p class="panel__subtitle">Стилизация отдельно от пользовательских фото.</p>
+        </div>
+      </div>
+
+      <div class="panel__body">
+        <div class="preview-box">
+          <img id="component-preview-img"
+               th:src="${defaultAvatar}"
+               alt="Preview">
+
+          <div class="preview-box__body">
+            <strong id="component-preview-name"
+                    th:text="${component.name != null ? component.name : 'Новый компонент'}">
+              Новый компонент
+            </strong>
+
+            <div class="card__meta">
+              <span id="component-preview-type">Тип</span>
+              ·
+              <span id="component-preview-producer">Производитель</span>
+            </div>
+
+            <div class="card__stats">
+              <span class="badge">Цена: <b id="component-preview-price" th:text="${component.price != null ? component.price + ' BYN' : '0 BYN'}">0 BYN</b></span>
+              <span class="badge">Склад: <b id="component-preview-stock" th:text="${component.stockQuantity != null ? component.stockQuantity : 0}">0</b></span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </aside>
+  </form>
+</main>
+
+<div th:replace="~{fragments/footer :: footer}"></div>
+<script th:src="@{/assets/js/ui.js}"></script>
+</body>
+</html>

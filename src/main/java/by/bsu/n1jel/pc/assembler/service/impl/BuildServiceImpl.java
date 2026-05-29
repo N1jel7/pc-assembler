@@ -1,9 +1,11 @@
 package by.bsu.n1jel.pc.assembler.service.impl;
 
+import by.bsu.n1jel.pc.assembler.dao.SearchDao;
 import by.bsu.n1jel.pc.assembler.dto.request.create.BuildCreateRequestDto;
 import by.bsu.n1jel.pc.assembler.dto.request.create.BuildPartitionCreateRequestDto;
 import by.bsu.n1jel.pc.assembler.dto.request.edit.BuildEditRequestDto;
 import by.bsu.n1jel.pc.assembler.dto.request.edit.BuildPartitionEditRequestDto;
+import by.bsu.n1jel.pc.assembler.dto.request.search.BuildFilterRequestDto;
 import by.bsu.n1jel.pc.assembler.dto.response.BuildInfoResponseDto;
 import by.bsu.n1jel.pc.assembler.dto.response.BuildPartitionInfoResponseDto;
 import by.bsu.n1jel.pc.assembler.entity.Build;
@@ -14,7 +16,10 @@ import by.bsu.n1jel.pc.assembler.repository.BuildPartitionRepository;
 import by.bsu.n1jel.pc.assembler.repository.BuildRepository;
 import by.bsu.n1jel.pc.assembler.repository.ComponentRepository;
 import by.bsu.n1jel.pc.assembler.service.api.BuildService;
+import by.bsu.n1jel.pc.assembler.service.utils.OverallUtil;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -26,10 +31,12 @@ import static by.bsu.n1jel.pc.assembler.exception.common.ResourceExceptionFactor
 @RequiredArgsConstructor
 public class BuildServiceImpl implements BuildService {
 
+
     private final BuildMapper buildMapper;
     private final BuildRepository buildRepository;
     private final BuildPartitionRepository partitionRepository;
     private final ComponentRepository componentRepository;
+    private final SearchDao searchDao;
 
     private BuildPartition findBuildPartitionById(Long buildPartitionId) {
         return partitionRepository.findById(buildPartitionId)
@@ -55,6 +62,26 @@ public class BuildServiceImpl implements BuildService {
 
     @Override
     @Transactional(readOnly = true)
+    public List<BuildInfoResponseDto> getLatestBuilds() {
+        return buildMapper.mapToResponseDto(buildRepository.findLatestBuilds(OverallUtil.getLatestObjectSize()));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<BuildInfoResponseDto> findBuildsBySearchFilter(BuildFilterRequestDto requestDto, Integer pageNumber) {
+        Page<Build> buildPage = searchDao.searchBuilds(requestDto, PageRequest.of(--pageNumber, OverallUtil.getPageSize()));
+        return buildPage.map(buildMapper::mapToResponseDto);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<BuildInfoResponseDto> getAllBuildsByPage(Integer pageNumber) {
+        Page<Build> buildPage = buildRepository.findAll(PageRequest.of(--pageNumber, OverallUtil.getPageSize()));
+        return buildPage.map(buildMapper::mapToResponseDto);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public List<BuildInfoResponseDto> getAllBuilds() {
         return buildMapper.mapToResponseDto(buildRepository.findAll());
     }
@@ -63,7 +90,7 @@ public class BuildServiceImpl implements BuildService {
     @Transactional
     public BuildInfoResponseDto createBuild(BuildCreateRequestDto requestDto) {
         Build createdBuild = Build.builder()
-                .name(requestDto.name())
+                .name(requestDto.getName())
                 .build();
 
         return buildMapper.mapToResponseDto(buildRepository.save(createdBuild));
@@ -78,7 +105,7 @@ public class BuildServiceImpl implements BuildService {
     @Override
     @Transactional
     public BuildInfoResponseDto editBuildInfo(BuildEditRequestDto requestDto) {
-        Build buildFromDb = findBuildById(requestDto.buildId());
+        Build buildFromDb = findBuildById(requestDto.getBuildId());
         buildMapper.updateBuild(buildFromDb, requestDto);
         return buildMapper.mapToResponseDto(buildRepository.save(buildFromDb));
     }
@@ -93,11 +120,31 @@ public class BuildServiceImpl implements BuildService {
     }
 
     @Override
+    @Transactional
+    public BuildPartitionInfoResponseDto createOrEditPartition(BuildPartitionCreateRequestDto requestDto) {
+
+        Build build = findBuildById(requestDto.getBuildId());
+
+        Component component = findComponentById(requestDto.getComponentId());
+        Long findableComponentTypeId = component.getComponentType().getId();
+
+        for(BuildPartition buildPartition : build.getBuildPartitions()) {
+            if(buildPartition.getComponent().getComponentType().getId().equals(findableComponentTypeId)) {
+                return editBuildPartitionInfo(new BuildPartitionEditRequestDto(buildPartition.getId(), requestDto.getComponentId(), requestDto.getQuantity()));
+            }
+        }
+
+        return createBuildPartition(requestDto);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public List<BuildPartitionInfoResponseDto> getAllBuildPartitions() {
         return buildMapper.mapToPartitionResponseDto(partitionRepository.findAll());
     }
 
     @Override
+    @Transactional(readOnly = true)
     public BuildPartitionInfoResponseDto getBuildPartitionById(Long buildPartitionId) {
         return buildMapper.mapToPartitionResponseDto(findBuildPartitionById(buildPartitionId));
     }
@@ -107,9 +154,9 @@ public class BuildServiceImpl implements BuildService {
     public BuildPartitionInfoResponseDto createBuildPartition(BuildPartitionCreateRequestDto requestDto) {
 
         BuildPartition createdBuildPartition = BuildPartition.builder()
-                .component(findComponentById(requestDto.componentId()))
-                .build(findBuildById(requestDto.buildId()))
-                .quantity(requestDto.quantity())
+                .component(findComponentById(requestDto.getComponentId()))
+                .build(findBuildById(requestDto.getBuildId()))
+                .quantity(requestDto.getQuantity())
                 .build();
 
         return buildMapper.mapToPartitionResponseDto(partitionRepository.save(createdBuildPartition));
@@ -135,10 +182,6 @@ public class BuildServiceImpl implements BuildService {
     }
 
     private void editDifficultBuildPartitionInfo(BuildPartition buildPartition, BuildPartitionEditRequestDto requestDto) {
-
-        if (requestDto.buildPartitionId() != null) {
-            buildPartition.setBuild(findBuildById(requestDto.buildPartitionId()));
-        }
 
         if (requestDto.componentId() != null) {
             buildPartition.setComponent(findComponentById(requestDto.componentId()));

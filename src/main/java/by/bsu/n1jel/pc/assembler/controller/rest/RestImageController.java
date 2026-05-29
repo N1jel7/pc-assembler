@@ -11,7 +11,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 
-@Tag(name = "Build&Partition", description = "Build and build partition rest controller")
+@Tag(name = "Image controller", description = "Images rest controller")
 @RestController
 @RequestMapping("api/v1/images")
 @RequiredArgsConstructor

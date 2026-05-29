@@ -1,13 +1,18 @@
 package by.bsu.n1jel.pc.assembler.service.impl;
 
+import by.bsu.n1jel.pc.assembler.dao.SearchDao;
 import by.bsu.n1jel.pc.assembler.dto.request.create.SpecificationTypeCreateRequestDto;
 import by.bsu.n1jel.pc.assembler.dto.request.edit.SpecificationTypeEditRequestDto;
+import by.bsu.n1jel.pc.assembler.dto.request.search.SpecificationTypeFilterRequestDto;
 import by.bsu.n1jel.pc.assembler.dto.response.SpecificationTypeInfoResponseDto;
 import by.bsu.n1jel.pc.assembler.entity.SpecificationType;
 import by.bsu.n1jel.pc.assembler.mapper.SpecificationMapper;
 import by.bsu.n1jel.pc.assembler.repository.SpecificationTypeRepository;
 import by.bsu.n1jel.pc.assembler.service.api.SpecificationService;
+import by.bsu.n1jel.pc.assembler.service.utils.OverallUtil;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -21,6 +26,7 @@ public class SpecificationServiceImpl implements SpecificationService {
 
     private final SpecificationTypeRepository specsTypeRepository;
     private final SpecificationMapper specsMapper;
+    private final SearchDao searchDao;
 
     private SpecificationType findSpecificationTypeById(Long specificationId) {
         return specsTypeRepository.findById(specificationId)
@@ -29,12 +35,15 @@ public class SpecificationServiceImpl implements SpecificationService {
                 );
     }
 
+
     @Override
+    @Transactional(readOnly = true)
     public SpecificationTypeInfoResponseDto getSpecificationTypeById(Long specificationId) {
         return specsMapper.mapTypeToResponse(findSpecificationTypeById(specificationId));
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<SpecificationTypeInfoResponseDto> getAllSpecificationTypes() {
         return specsMapper.mapTypeToResponse(specsTypeRepository.findAll());
     }
@@ -43,11 +52,11 @@ public class SpecificationServiceImpl implements SpecificationService {
     @Transactional
     public SpecificationTypeInfoResponseDto createSpecificationType(SpecificationTypeCreateRequestDto requestDto) {
         SpecificationType specification = SpecificationType.builder()
-                .name(requestDto.name())
+                .name(requestDto.getName())
                 .build();
 
-        if (!requestDto.description().isEmpty()) {
-            specification.setDescription(requestDto.description());
+        if (!requestDto.getDescription().isEmpty()) {
+            specification.setDescription(requestDto.getDescription());
         }
 
         return specsMapper.mapTypeToResponse(specsTypeRepository.save(specification));
@@ -68,5 +77,12 @@ public class SpecificationServiceImpl implements SpecificationService {
         SpecificationTypeInfoResponseDto responseDto = specsMapper.mapTypeToResponse(specificationFromDb);
         specsTypeRepository.delete(specificationFromDb);
         return responseDto;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<SpecificationTypeInfoResponseDto> searchSpecificationTypes(SpecificationTypeFilterRequestDto requestDto, Integer pageNumber) {
+        Page<SpecificationType> specificationTypes = searchDao.searchSpecificationTypes(requestDto, PageRequest.of(--pageNumber, OverallUtil.getPageSize()));
+        return specificationTypes.map(specsMapper::mapTypeToResponse);
     }
 }

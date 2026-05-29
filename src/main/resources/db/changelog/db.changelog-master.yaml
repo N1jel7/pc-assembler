@@ -4,6 +4,8 @@ databaseChangeLog:
   - include:
       file: db/changelog/changeset/v2/image-entity.sql
   - include:
-      file: db/changelog/changeset/v2/test-data.sql
+      file: db/changelog/changeset/v3/calculate-build-cost-function.sql
   - include:
-      file: db/changelog/changeset/v3/calculate_build_cost_function.sql
+      file: db/changelog/changeset/v4/update-buildpartition-columns.sql
+  - include:
+      file: db/changelog/changeset/v4/test-data.sql

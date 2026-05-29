@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org" th:attr="data-page=${activePage}">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title th:text="${pageTitle}">Сборка</title>
+  <link rel="stylesheet" th:href="@{/assets/css/styles.css}">
+</head>
+<body>
+<div th:replace="~{fragments/header :: header(${activePage})}"></div>
+
+<main class="container page-shell">
+  <section class="page-hero">
+    <div>
+      <p class="eyebrow">Детали сборки</p>
+      <h1 th:text="${build.name}">Build name</h1>
+      <p>Цена, компоненты, количество и фотографии.</p>
+    </div>
+    <div class="header-actions">
+      <a class="button button--ghost" th:href="@{/builds}">← Назад</a>
+      <a class="button button--primary" th:href="@{/builds/{id}/edit(id=${build.buildId})}">Редактировать</a>
+    </div>
+  </section>
+
+  <section class="detail-layout">
+    <div class="detail-image">
+      <img th:src="${build.avatar}" th:alt="${build.name}">
+    </div>
+
+    <div class="detail-box">
+      <h2 th:text="${build.name}">Build</h2>
+      <p>Дата создания: <b th:text="${#temporals.format(build.getCreationDate(), 'dd.MM.yyyy HH:mm')}">date</b></p>
+
+      <div class="detail-grid">
+        <div class="info-tile"><span>Общая цена</span><strong th:text="${#numbers.formatDecimal(totalPrice, 0, 'COMMA', 0, 'POINT')} + ' BYN'">0 BYN</strong></div>
+        <div class="info-tile"><span>Компонентов</span><strong th:text="${#lists.size(buildItems)} + '/' + ${maxComponentTypeAmount}">0/8</strong></div>
+        <div class="info-tile"><span>Фото</span><strong th:text="${#lists.size(buildPhotos)}">0</strong></div>
+        <div class="info-tile"><span>Статус</span><strong>Демо / черновик</strong></div>
+      </div>
+    </div>
+  </section>
+
+  <section style="margin-top:18px;">
+    <div class="page-hero">
+      <div>
+        <p class="eyebrow">Слоты</p>
+        <h2 style="margin:0;">Состав сборки</h2>
+      </div>
+    </div>
+
+    <div class="slot-grid">
+      <article class="slot-card" th:each="item : ${buildItems}">
+        <div class="slot-card__head">
+          <div>
+            <h3 th:text="${item.componentTypeName}">Slot</h3>
+            <div class="card__meta" th:text="${item.fixedQuantity ? '1 шт.' : 'до ' + item.maxQuantity + ' шт.'}">1 шт.</div>
+          </div>
+          <span class="badge badge--accent" th:text="${item.componentTypeName}">Type</span>
+        </div>
+
+        <a class="slot-selected slot-selected--link" th:if="${item.componentId != null}" th:href="@{/components/{id}(id=${item.componentId})}">
+          <img th:src="${defaultAvatar}" th:alt="${item.componentName}">
+          <div>
+            <strong th:text="${item.componentName}">Component</strong>
+            <div class="card__meta" th:text="${item.producerName}">Producer</div>
+            <div class="card__meta">Количество: <b th:text="${item.quantity}">1</b></div>
+            <div class="card__meta">Цена за штуку: <b th:text="${#numbers.formatDecimal(item.componentPrice, 0, 'COMMA', 0, 'POINT')} + ' BYN'">0 BYN</b></div>
+            <div class="card__meta">Сумма: <b th:text="${#numbers.formatDecimal(item.subtotal, 0, 'COMMA', 0, 'POINT')} + ' BYN'">0 BYN</b></div>
+          </div>
+        </a>
+
+        <div class="slot-empty" th:if="${item.componentId == null}">
+          Компонент не выбран.
+        </div>
+      </article>
+    </div>
+  </section>
+
+  <section style="margin-top:18px;">
+    <div class="page-hero">
+      <div>
+        <p class="eyebrow">Фотографии</p>
+        <h2 style="margin:0;">Дополнительные изображения сборки</h2>
+      </div>
+    </div>
+
+    <div class="upload-gallery" th:if="${not #lists.isEmpty(buildPhotos)}">
+      <article class="upload-item" th:each="photo, stat : ${buildPhotos}" th:attr="data-image-src=${photo.url}, data-image-title='Фото ' + ${stat.count}">
+        <img class="upload-item__img" th:src="${photo.url}" th:alt="'Фото ' + ${stat.count}">
+        <div class="upload-item__bar">
+          <div class="upload-item__name" th:text="'Фото ' + ${stat.count}">Фото 1</div>
+          <div class="upload-item__actions">
+            <button class="upload-item__btn" type="button" data-image-view>👁</button>
+          </div>
+        </div>
+      </article>
+    </div>
+
+    <div class="empty-state" th:if="${#lists.isEmpty(buildPhotos)}">
+      Дополнительные фото отсутствуют.
+    </div>
+  </section>
+</main>
+
+<div th:replace="~{fragments/footer :: footer}"></div>
+<script th:src="@{/assets/js/ui.js}"></script>
+</body>
+</html>

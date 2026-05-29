@@ -7,7 +7,7 @@ import by.bsu.n1jel.pc.assembler.dto.request.edit.ComponentEditRequestDto;
 import by.bsu.n1jel.pc.assembler.dto.request.edit.ComponentTypeEditRequestDto;
 import by.bsu.n1jel.pc.assembler.dto.response.ComponentInfoResponseDto;
 import by.bsu.n1jel.pc.assembler.dto.response.ComponentTypeInfoResponseDto;
-import by.bsu.n1jel.pc.assembler.dto.request.search.ComponentSearchFilterRequestDto;
+import by.bsu.n1jel.pc.assembler.dto.request.search.ComponentFilterRequestDto;
 import by.bsu.n1jel.pc.assembler.service.api.ComponentService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -35,8 +35,8 @@ public class RestComponentController {
             description = "Return components that suitable request parameters"
     )
     @PostMapping("/search/{page}")
-    public Page<ComponentInfoResponseDto> searchByFilter(@RequestBody ComponentSearchFilterRequestDto requestDto, @PathVariable Integer page) {
-        return componentService.findComponentsBySearchFilter(requestDto, PageRequest.of(--page, PAGE_SIZE));
+    public Page<ComponentInfoResponseDto> searchByFilter(@RequestBody ComponentFilterRequestDto requestDto, @PathVariable Integer page) {
+        return componentService.findComponentsBySearchFilter(requestDto, page);
     }
 
     // COMPONENT ENDPOINTS

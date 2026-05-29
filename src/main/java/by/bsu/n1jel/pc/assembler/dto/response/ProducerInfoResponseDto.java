@@ -1,8 +1,11 @@
 package by.bsu.n1jel.pc.assembler.dto.response;
 
-public record ProducerInfoResponseDto(
-        Long id,
-        String name,
-        String country
-) {
+import lombok.Data;
+
+@Data
+public class ProducerInfoResponseDto {
+    private Long id;
+    private String name;
+    private String country;
+    private String avatar;
 }

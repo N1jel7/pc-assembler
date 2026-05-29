@@ -1,7 +1,13 @@
 package by.bsu.n1jel.pc.assembler.dto.request.create;
 
-public record BuildCreateRequestDto(
-        String name
-) {
+import lombok.AccessLevel;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.experimental.FieldDefaults;
 
+@Data
+@NoArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE)
+public class BuildCreateRequestDto {
+    String name;
 }

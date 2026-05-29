@@ -6,16 +6,18 @@ import by.bsu.n1jel.pc.assembler.dto.request.create.ComponentTypeCreateRequestDt
 import by.bsu.n1jel.pc.assembler.dto.request.create.SpecificationCreateRequestDto;
 import by.bsu.n1jel.pc.assembler.dto.request.edit.ComponentEditRequestDto;
 import by.bsu.n1jel.pc.assembler.dto.request.edit.ComponentTypeEditRequestDto;
+import by.bsu.n1jel.pc.assembler.dto.request.edit.SpecificationEditRequestDto;
+import by.bsu.n1jel.pc.assembler.dto.request.search.ComponentFilterRequestDto;
 import by.bsu.n1jel.pc.assembler.dto.response.ComponentInfoResponseDto;
 import by.bsu.n1jel.pc.assembler.dto.response.ComponentTypeInfoResponseDto;
-import by.bsu.n1jel.pc.assembler.dto.request.search.ComponentSearchFilterRequestDto;
 import by.bsu.n1jel.pc.assembler.entity.*;
 import by.bsu.n1jel.pc.assembler.mapper.ComponentMapper;
 import by.bsu.n1jel.pc.assembler.repository.*;
 import by.bsu.n1jel.pc.assembler.service.api.ComponentService;
+import by.bsu.n1jel.pc.assembler.service.utils.OverallUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -75,11 +77,11 @@ public class ComponentServiceImpl implements ComponentService {
     @Transactional
     public ComponentInfoResponseDto createComponent(ComponentCreateRequestDto requestDto) {
         Component createdComponent = Component.builder()
-                .name(requestDto.name())
-                .producer(findProducerById(requestDto.producer()))
-                .componentType(findComponentTypeById(requestDto.componentType()))
-                .price(requestDto.price())
-                .stockQuantity(requestDto.stockQuantity())
+                .name(requestDto.getName())
+                .producer(findProducerById(requestDto.getProducer()))
+                .componentType(findComponentTypeById(requestDto.getComponentType()))
+                .price(requestDto.getPrice())
+                .stockQuantity(requestDto.getStockQuantity())
                 .build();
 
         createdComponent = componentRepository.save(createdComponent);
@@ -87,11 +89,11 @@ public class ComponentServiceImpl implements ComponentService {
 
         List<Specification> createdSpecifications = new ArrayList<>();
 
-        for (SpecificationCreateRequestDto spec : requestDto.specifications()) {
+        for (SpecificationCreateRequestDto spec : requestDto.getSpecifications()) {
             createdSpecifications.add(Specification.builder()
-                    .type(findSpecificationTypeById(spec.specificationTypeId()))
+                    .type(findSpecificationTypeById(spec.getSpecificationTypeId()))
                     .component(createdComponent)
-                    .value(spec.value())
+                    .value(spec.getValue())
                     .build());
 
         }
@@ -104,15 +106,28 @@ public class ComponentServiceImpl implements ComponentService {
 
     @Override
     @Transactional(readOnly = true)
-    public Page<ComponentInfoResponseDto> findComponentsBySearchFilter(ComponentSearchFilterRequestDto requestDto, Pageable pageable) {
-        Page<Component> componentPage = searchDao.searchComponents(requestDto, pageable);
+    public Page<ComponentInfoResponseDto> findComponentsBySearchFilter(ComponentFilterRequestDto requestDto, Integer pageNumber) {
+        Page<Component> componentPage = searchDao.searchComponents(requestDto, PageRequest.of(--pageNumber, OverallUtil.getPageSize()));
         return componentPage.map(componentMapper::mapToResponseDto);
     }
+
+    @Override
+    public String getComponentTypeNameById(Long componentTypeId) {
+        return componentTypeRepository.getComponentTypeNameById(componentTypeId);
+    }
+
 
     @Override
     @Transactional(readOnly = true)
     public List<ComponentInfoResponseDto> getAllComponents() {
         return componentMapper.mapToResponseDto(componentRepository.findAll());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<ComponentInfoResponseDto> getComponentsByPage(Integer pageNumber) {
+        Page<Component> componentPage = componentRepository.findAll(PageRequest.of(--pageNumber, OverallUtil.getPageSize()));
+        return componentPage.map(componentMapper::mapToResponseDto);
     }
 
     @Override
@@ -127,7 +142,7 @@ public class ComponentServiceImpl implements ComponentService {
         ComponentType findableType = findComponentTypeById(componentTypeId);
         List<Component> findableComponents = componentRepository.findComponentsByComponentType(findableType);
 
-        if(!findableComponents.isEmpty()) {
+        if (!findableComponents.isEmpty()) {
             return componentMapper.mapToResponseDto(findableComponents);
         }
 
@@ -137,7 +152,7 @@ public class ComponentServiceImpl implements ComponentService {
     @Override
     @Transactional
     public ComponentInfoResponseDto editComponentInfo(ComponentEditRequestDto requestDto) {
-        Component componentFromDb = findComponentById(requestDto.id());
+        Component componentFromDb = findComponentById(requestDto.getId());
 
         componentFromDb = componentMapper.updateComponent(componentFromDb, requestDto);
 
@@ -145,82 +160,111 @@ public class ComponentServiceImpl implements ComponentService {
     }
 
     private Component updateDifficultComponentData(Component componentFromDb, ComponentEditRequestDto requestDto) {
-        if (requestDto.componentType() != null) {
-            componentFromDb.setComponentType(findComponentTypeById(requestDto.componentType()));
+        if (requestDto.getComponentType() != null) {
+            componentFromDb.setComponentType(findComponentTypeById(requestDto.getComponentType()));
         }
 
-        if (requestDto.producer() != null) {
-            componentFromDb.setProducer(findProducerById(requestDto.producer()));
+        if (requestDto.getProducer() != null) {
+            componentFromDb.setProducer(findProducerById(requestDto.getProducer()));
         }
 
-        if (requestDto.specifications() != null) {
-            List<Specification> specifications = componentFromDb.getSpecifications();
-            requestDto.specifications().forEach(dtoSpec -> {
-                specifications.iterator().forEachRemaining(objectSpec -> {
-                    if (dtoSpec.id().equals(objectSpec.getId())) {
-                        objectSpec.setValue(dtoSpec.value());
+        if (requestDto.getSpecifications() != null) {
+            List<Specification> existingSpecs = componentFromDb.getSpecifications();
+
+            List<Specification> updatedSpecs = new ArrayList<>();
+
+            for (SpecificationEditRequestDto dtoSpec : requestDto.getSpecifications()) {
+                boolean found = false;
+
+                for (Specification existingSpec : existingSpecs) {
+                    if (dtoSpec.getId().equals(existingSpec.getId())) {
+                        existingSpec.setValue(dtoSpec.getValue());
+                        updatedSpecs.add(existingSpec);
+                        found = true;
+                        break;
                     }
-                });
-            });
+                }
 
-            componentFromDb.setSpecifications(specifications);
+                if (!found) {
+                    Specification newSpec = Specification.builder()
+                            .component(componentFromDb)
+                            .type(findSpecificationTypeById(dtoSpec.getId()))
+                            .value(dtoSpec.getValue())
+                            .build();
+                    updatedSpecs.add(newSpec);
+                }
+            }
 
+            componentFromDb.setSpecifications(updatedSpecs);
         }
+
         return componentFromDb;
     }
 
-    @Override
-    @Transactional
-    public ComponentInfoResponseDto deleteComponentById(Long componentId) {
-        Component componentFromDb = findComponentById(componentId);
-        ComponentInfoResponseDto responseDto = componentMapper.mapToResponseDto(componentFromDb);
-        componentRepository.delete(componentFromDb);
-        return responseDto;
-    }
 
-    @Override
-    public List<ComponentTypeInfoResponseDto> getAllComponentTypes() {
-        return componentMapper.mapToTypeResponseDto(componentTypeRepository.findAll());
-    }
+@Override
+@Transactional
+public ComponentInfoResponseDto deleteComponentById(Long componentId) {
+    Component componentFromDb = findComponentById(componentId);
+    ComponentInfoResponseDto responseDto = componentMapper.mapToResponseDto(componentFromDb);
+    componentRepository.delete(componentFromDb);
+    return responseDto;
+}
 
-    @Override
-    public ComponentTypeInfoResponseDto getComponentTypeById(Long componentTypeId) {
-        return componentMapper.mapToTypeResponseDto(findComponentTypeById(componentTypeId));
-    }
+@Override
+@Transactional(readOnly = true)
+public List<ComponentTypeInfoResponseDto> getAllComponentTypes() {
+    return componentMapper.mapToTypeResponseDto(componentTypeRepository.findAll());
+}
 
-    @Override
-    @Transactional
-    public ComponentTypeInfoResponseDto createComponentType(ComponentTypeCreateRequestDto requestDto) {
+@Override
+@Transactional(readOnly = true)
+public ComponentTypeInfoResponseDto getComponentTypeById(Long componentTypeId) {
+    return componentMapper.mapToTypeResponseDto(findComponentTypeById(componentTypeId));
+}
 
-        ComponentType createdComponentType = ComponentType.builder()
-                .name(requestDto.name())
-                .build();
+@Override
+@Transactional
+public ComponentTypeInfoResponseDto createComponentType(ComponentTypeCreateRequestDto requestDto) {
 
-        if (requestDto.parentType() != null) {
-            createdComponentType.setParentType(findComponentTypeById(requestDto.parentType()));
-        }
-        return componentMapper.mapToTypeResponseDto(componentTypeRepository.save(createdComponentType));
-    }
+    ComponentType createdComponentType = ComponentType.builder()
+            .name(requestDto.name())
+            .build();
 
-    @Override
-    @Transactional
-    public ComponentTypeInfoResponseDto editComponentType(ComponentTypeEditRequestDto requestDto) {
-        ComponentType componentTypeFromDb = findComponentTypeById(requestDto.id());
-        componentTypeFromDb = componentMapper.updateComponentType(componentTypeFromDb, requestDto);
+    return componentMapper.mapToTypeResponseDto(componentTypeRepository.save(createdComponentType));
+}
 
-        if (requestDto.parentType() != null) {
-            componentTypeFromDb.setParentType(findComponentTypeById(requestDto.parentType()));
-        }
+@Override
+@Transactional
+public ComponentTypeInfoResponseDto editComponentType(ComponentTypeEditRequestDto requestDto) {
+    ComponentType componentTypeFromDb = findComponentTypeById(requestDto.id());
+    componentTypeFromDb = componentMapper.updateComponentType(componentTypeFromDb, requestDto);
 
-        return componentMapper.mapToTypeResponseDto(componentTypeRepository.save(componentTypeFromDb));
-    }
+    return componentMapper.mapToTypeResponseDto(componentTypeRepository.save(componentTypeFromDb));
+}
 
-    @Override
-    @Transactional
-    public ComponentTypeInfoResponseDto deleteComponentTypeById(Long componentTypeId) {
-        ComponentType componentTypeFromDb = findComponentTypeById(componentTypeId);
-        ComponentTypeInfoResponseDto responseDto = componentMapper.mapToTypeResponseDto(componentTypeFromDb);
-        componentTypeRepository.delete(componentTypeFromDb);
-        return responseDto;
-    }
+@Override
+@Transactional
+public ComponentTypeInfoResponseDto deleteComponentTypeById(Long componentTypeId) {
+    ComponentType componentTypeFromDb = findComponentTypeById(componentTypeId);
+    ComponentTypeInfoResponseDto responseDto = componentMapper.mapToTypeResponseDto(componentTypeFromDb);
+    componentTypeRepository.delete(componentTypeFromDb);
+    return responseDto;
+}
+
+@Override
+public List<String> getAllProcessorProducers() {
+    return componentRepository.getAllProcessorProducers();
+}
+
+@Override
+public Integer getAllComponentTypesSize() {
+    return componentTypeRepository.getAllComponentTypesSize();
+}
+
+@Override
+@Transactional(readOnly = true)
+public List<ComponentInfoResponseDto> getLatestComponents() {
+    return componentMapper.mapToResponseDto(componentRepository.findLatestComponents(OverallUtil.getLatestObjectSize()));
+}
 }

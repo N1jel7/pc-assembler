@@ -1,22 +1,16 @@
-insert into component_types (id, name, parent_type)
-values (nextval('component_types_seq'), 'Процессор', null),
-       (nextval('component_types_seq'), 'Материнская плата', null),
-       (nextval('component_types_seq'), 'Видеокарта', null),
-       (nextval('component_types_seq'), 'Оперативная память', null),
-       (nextval('component_types_seq'), 'Накопитель', null),
-       (nextval('component_types_seq'), 'Блок питания', null),
-       (nextval('component_types_seq'), 'Охлаждение', null),
-       (nextval('component_types_seq'), 'Корпус', null);
+insert into component_types (id, name, min_amount, max_amount)
+values (nextval('component_types_seq'), 'Процессор', 1, 1),
+       (nextval('component_types_seq'), 'Материнская плата', 1, 1),
+       (nextval('component_types_seq'), 'Видеокарта', 1, 1),
+       (nextval('component_types_seq'), 'Оперативная память', 1, 8),
+       (nextval('component_types_seq'), 'Накопитель', 1, 4),
+       (nextval('component_types_seq'), 'Блок питания', 1, 1),
+       (nextval('component_types_seq'), 'Кулер', 1, 10),
+       (nextval('component_types_seq'), 'Кулер процессора', 1, 1),
+       (nextval('component_types_seq'), 'Корпус', 1, 1),
+       (nextval('component_types_seq'), 'SSD', 1, 4),
+       (nextval('component_types_seq'), 'HDD', 1, 4);
 
-insert into component_types (id, name, parent_type)
-values (nextval('component_types_seq'), 'SSD', (select id from component_types where name = 'Накопитель' limit 1)),
-       (nextval('component_types_seq'), 'HDD', (select id from component_types where name = 'Накопитель' limit 1));
-
-insert into component_types (id, name, parent_type)
-values (nextval('component_types_seq'), 'Воздушное',
-        (select id from component_types where name = 'Охлаждение' limit 1)),
-       (nextval('component_types_seq'), 'Жидкостное',
-        (select id from component_types where name = 'Охлаждение' limit 1));
 
 -- 2. Типы спецификаций
 insert into specification_types (id, name, description)
@@ -178,17 +172,14 @@ values (nextval('components_seq'), 'Corsair RM1000x 1000W', 189.99, 60,
 -- Охлаждение
 insert into components (id, name, price, stock_quantity, component_type_id, producer_id)
 values (nextval('components_seq'), 'Noctua NH-D15', 99.99, 70,
-        (select id from component_types where name = 'Воздушное' limit 1),
+        (select id from component_types where name = 'Кулер' limit 1),
         (select id from producers where name = 'Noctua' limit 1)),
        (nextval('components_seq'), 'Deepcool AK620', 64.99, 85,
-        (select id from component_types where name = 'Воздушное' limit 1),
+        (select id from component_types where name = 'Кулер процессора' limit 1),
         (select id from producers where name = 'Deepcool' limit 1)),
-       (nextval('components_seq'), 'Corsair iCUE H150i Elite', 199.99, 50,
-        (select id from component_types where name = 'Жидкостное' limit 1),
-        (select id from producers where name = 'Corsair' limit 1)),
-       (nextval('components_seq'), 'Deepcool LS720', 139.99, 55,
-        (select id from component_types where name = 'Жидкостное' limit 1),
-        (select id from producers where name = 'Deepcool' limit 1));
+       (nextval('components_seq'), 'Corsair iCUE H150i Elite', 189.99, 50,
+        (select id from component_types where name = 'Кулер процессора' limit 1),
+        (select id from producers where name = 'Corsair' limit 1));
 
 -- Корпуса
 insert into components (id, name, price, stock_quantity, component_type_id, producer_id)
@@ -315,7 +306,10 @@ values (nextval('build_partitions_seq'), 1, (select id from builds where name = 
        (nextval('build_partitions_seq'), 1, (select id from builds where name = 'Игровой ПК High-End' limit 1),
         (select id from components where name = 'Corsair RM1000x 1000W' limit 1)),
        (nextval('build_partitions_seq'), 1, (select id from builds where name = 'Игровой ПК High-End' limit 1),
-        (select id from components where name = 'Corsair iCUE H150i Elite' limit 1)),
+        (select id
+         from components
+         where name = 'Corsair iCUE H150i Elite'
+         limit 1)), -- ТЕПЕРЬ ЭТОТ КОМПОНЕНТ СУЩЕСТВУЕТ
        (nextval('build_partitions_seq'), 1, (select id from builds where name = 'Игровой ПК High-End' limit 1),
         (select id from components where name = 'Corsair 5000D Airflow' limit 1));
 

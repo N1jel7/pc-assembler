@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<body>
+<footer th:fragment="footer" class="footer">
+  <div class="container footer__inner">
+    <div>
+      <strong>PC ASSEMBLER</strong>
+      <div>Современный конфигуратор персональных компьютеров.</div>
+    </div>
+
+    <div class="footer__links">
+      <a th:href="@{/components}">Компоненты</a>
+      <a th:href="@{/builds}">Сборки</a>
+      <a th:href="@{/producers}">Производители</a>
+      <a th:href="@{/specification-types}">Характеристики</a>
+    </div>
+  </div>
+</footer>
+</body>
+</html>

@@ -1,4 +1,8 @@
 spring:
+  servlet:
+    multipart:
+      max-file-size: 5MB
+      max-request-size: 20MB
   liquibase:
     enabled: true
   application:
@@ -7,9 +11,11 @@ spring:
     hibernate:
       ddl-auto: none
     open-in-view: false
+
 logging:
   level:
     sql: debug
+
 springdoc:
   swagger-ui:
     document-title: PC Assembler API

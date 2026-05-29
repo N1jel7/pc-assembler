@@ -5,10 +5,8 @@ import by.bsu.n1jel.pc.assembler.dto.request.edit.ComponentTypeEditRequestDto;
 import by.bsu.n1jel.pc.assembler.dto.response.ComponentTypeInfoResponseDto;
 import by.bsu.n1jel.pc.assembler.dto.response.ComponentInfoResponseDto;
 import by.bsu.n1jel.pc.assembler.dto.response.SpecificationInfoResponseDto;
-import by.bsu.n1jel.pc.assembler.entity.Component;
-import by.bsu.n1jel.pc.assembler.entity.ComponentType;
-import by.bsu.n1jel.pc.assembler.entity.Producer;
-import by.bsu.n1jel.pc.assembler.entity.Specification;
+import by.bsu.n1jel.pc.assembler.entity.*;
+import by.bsu.n1jel.pc.assembler.service.utils.DefaultImageUtil;
 import org.mapstruct.*;
 
 import java.util.ArrayList;
@@ -19,14 +17,16 @@ import static org.mapstruct.NullValuePropertyMappingStrategy.IGNORE;
 @Mapper(componentModel = MappingConstants.ComponentModel.SPRING, nullValuePropertyMappingStrategy = IGNORE)
 public interface ComponentMapper {
 
-    @Mapping(target = "producer", source = "producer", qualifiedByName = "getProducerId")
-    @Mapping(target = "componentType", source = "componentType", qualifiedByName = "getComponentTypeId")
+    @Mapping(target = "producerId", source = "producer", qualifiedByName = "getProducerId")
+    @Mapping(target = "producerName", source = "producer", qualifiedByName = "getProducerName")
+    @Mapping(target = "componentTypeId", source = "componentType", qualifiedByName = "getComponentTypeId")
+    @Mapping(target = "componentTypeName", source = "componentType", qualifiedByName = "getComponentTypeName")
     @Mapping(target = "specifications", source = "specifications", qualifiedByName = "getSpecificationInfoResponseDtoList")
+    @Mapping(target = "avatar", source = "component", qualifiedByName = "getDefaultAvatar")
     ComponentInfoResponseDto mapToResponseDto(Component component);
 
     List<ComponentInfoResponseDto> mapToResponseDto(List<Component> components);
 
-    @Mapping(target = "parentType", source = "componentType", qualifiedByName = "getComponentParentTypeId")
     ComponentTypeInfoResponseDto mapToTypeResponseDto(ComponentType componentType);
 
     List<ComponentTypeInfoResponseDto> mapToTypeResponseDto(List<ComponentType> componentTypes);
@@ -36,7 +36,6 @@ public interface ComponentMapper {
     @Mapping(target = "specifications", ignore = true)
     Component updateComponent(@MappingTarget Component component, ComponentEditRequestDto requestDto);
 
-    @Mapping(target = "parentType", ignore = true)
     ComponentType updateComponentType(@MappingTarget ComponentType componentType, ComponentTypeEditRequestDto requestDto);
 
     @Named("getSpecificationInfoResponseDtoList")
@@ -48,6 +47,7 @@ public interface ComponentMapper {
                 specificationInfoResponseDtos.add(
                         new SpecificationInfoResponseDto(
                                 spec.getId(),
+                                spec.getType().getId(),
                                 spec.getType().getName(),
                                 spec.getType().getDescription(),
                                 spec.getValue()));
@@ -62,16 +62,23 @@ public interface ComponentMapper {
         return producer.getId();
     }
 
+    @Named("getProducerName")
+    default String getProducerName(Producer producer) {
+        return producer.getName();
+    }
+
     @Named("getComponentTypeId")
     default Long getComponentTypeId(ComponentType componentType) {
         return componentType.getId();
     }
 
-    @Named("getComponentParentTypeId")
-    default Long getComponentParentTypeId(ComponentType componentType) {
-        if (componentType.getParentType() != null) {
-            return componentType.getParentType().getId();
-        }
-        return null;
+    @Named("getComponentTypeName")
+    default String getComponentTypeName(ComponentType componentType) {
+        return componentType.getName();
+    }
+
+    @Named("getDefaultAvatar")
+    default String getDefaultAvatar(Component component) {
+        return DefaultImageUtil.componentAvatar(component.getComponentType().getName(), component.getName());
     }
 }

@@ -3,6 +3,7 @@ package by.bsu.n1jel.pc.assembler.entity;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
+import org.springframework.format.annotation.DateTimeFormat;
 
 import java.sql.Timestamp;
 import java.util.List;
@@ -19,7 +20,7 @@ public class Build {
     private Long id;
 
     @ToString.Exclude // TODO временно
-    @OneToMany(mappedBy = "build", cascade = {CascadeType.PERSIST, CascadeType.REFRESH}, fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "build", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<BuildPartition> buildPartitions;
 
     @Column(name = "name", nullable = false)

@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org" th:attr="data-page=${activePage}">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title th:text="${pageTitle}">Производители</title>
+  <link rel="stylesheet" th:href="@{/assets/css/styles.css}">
+</head>
+<body>
+<div th:replace="~{fragments/header :: header(${activePage})}"></div>
+
+<main class="container page-shell">
+  <section class="page-hero">
+    <div>
+      <p class="eyebrow">Каталог</p>
+      <h1>Производители</h1>
+      <p>Поиск по имени и фильтр по стране.</p>
+    </div>
+    <div class="header-actions">
+      <a class="button button--primary" th:href="@{/producers/create}">+ Новый производитель</a>
+    </div>
+  </section>
+
+  <form class="toolbar toolbar--panel" method="get" th:action="@{/producers}">
+    <input class="input" type="text" name="query" placeholder="Поиск по имени" th:value="${producerFilter.query()}" style="flex:1; min-width:220px;">
+
+    <select class="select" name="country" style="min-width:220px;">
+      <option value="" th:selected="${producerFilter.country == null || producerFilter.country == ''}">Все страны</option>
+      <option th:each="country : ${countries}"
+              th:value="${country}"
+              th:text="${country}"
+              th:selected="${producerFilter.country == country}">
+      </option>
+    </select>
+
+    <button class="button button--primary" type="submit">Найти</button>
+    <a class="button button--ghost" th:href="@{/producers}">Сбросить</a>
+  </form>
+
+  <section class="cards-grid" th:if="${not #lists.isEmpty(producers)}">
+    <article class="card card--hover" th:each="producer : ${producers}">
+      <a class="card__media" th:href="@{/producers/{id}/edit(id=${producer.id})}">
+        <img th:src="${producer.avatar}" th:alt="${producer.name}">
+      </a>
+
+      <div class="card__body">
+        <div class="card__top">
+          <div>
+            <h3 th:text="${producer.name}">Producer</h3>
+            <div class="card__meta" th:text="${producer.country}">Country</div>
+          </div>
+          <span class="badge badge--purple">Производитель</span>
+        </div>
+
+        <div class="card__actions">
+          <a class="button button--ghost button--sm" th:href="@{/producers/{id}/edit(id=${producer.id})}">Изменить</a>
+        </div>
+      </div>
+    </article>
+  </section>
+
+  <div class="empty-state" th:if="${#lists.isEmpty(producers)}">
+    Ничего не найдено.
+  </div>
+
+  <div class="pagination" th:if="${totalPages > 1}">
+    <a th:if="${currentPage > 1}"
+       th:href="@{/producers(page=${currentPage - 1}, query=${producerFilter.query}, country=${producerFilter.country})}">
+      ←
+    </a>
+
+    <a th:each="p : ${#numbers.sequence(1, totalPages)}"
+       th:classappend="${p == currentPage} ? ' is-active'"
+       th:text="${p}"
+       th:href="@{/producers(page=${p}, query=${producerFilter.query}, country=${producerFilter.country})}">
+    </a>
+
+    <a th:if="${currentPage < totalPages}"
+       th:href="@{/producers(page=${currentPage + 1}, query=${producerFilter.query}, country=${producerFilter.country})}">
+      →
+    </a>
+  </div>
+</main>
+
+<div th:replace="~{fragments/footer :: footer}"></div>
+<script th:src="@{/assets/js/ui.js}"></script>
+</body>
+</html>

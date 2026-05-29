@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<body>
+<header th:fragment="header(activePage)" class="site-header">
+  <div class="container nav">
+    <a class="brand" th:href="@{/}" aria-label="PC ASSEMBLER">
+      <div class="brand__mark">PA</div>
+      <div class="brand__text">
+        <strong>PC ASSEMBLER</strong>
+        <span>конфигуратор пк</span>
+      </div>
+    </a>
+
+    <nav class="nav__links" aria-label="Основная навигация">
+      <a class="nav__link"
+         th:classappend="${activePage == 'index'} ? ' is-active'"
+         th:href="@{/}">Главная</a>
+
+      <a class="nav__link"
+         th:classappend="${activePage == 'components'} ? ' is-active'"
+         th:href="@{/components}">Компоненты</a>
+
+      <a class="nav__link"
+         th:classappend="${activePage == 'specification-types'} ? ' is-active'"
+         th:href="@{/specification-types}">Типы характеристик</a>
+
+      <a class="nav__link"
+         th:classappend="${activePage == 'producers'} ? ' is-active'"
+         th:href="@{/producers}">Производители</a>
+
+      <a class="nav__link"
+         th:classappend="${activePage == 'builds'} ? ' is-active'"
+         th:href="@{/builds}">Сборки</a>
+    </nav>
+
+    <div class="header-actions">
+      <a class="button button--ghost button--sm" th:href="@{/components/create}">+ Компонент</a>
+      <a class="button button--primary button--sm" th:href="@{/builds/create}">+ Сборка</a>
+    </div>
+  </div>
+</header>
+</body>
+</html>

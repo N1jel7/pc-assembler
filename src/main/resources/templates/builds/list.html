@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org" th:attr="data-page=${activePage}">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title th:text="${pageTitle}">Сборки</title>
+  <link rel="stylesheet" th:href="@{/assets/css/styles.css}">
+</head>
+<body>
+<div th:replace="~{fragments/header :: header(${activePage})}"></div>
+
+<main class="container page-shell">
+  <section class="page-hero">
+    <div>
+      <p class="eyebrow">Каталог</p>
+      <h1>Сборки</h1>
+      <p>Поиск по названию, цене.</p>
+    </div>
+    <div class="header-actions">
+      <a class="button button--primary" th:href="@{/builds/create}">+ Создать сборку</a>
+    </div>
+  </section>
+
+  <form class="toolbar toolbar--panel" method="get" th:action="@{/builds}">
+    <input class="input" type="text" name="query" placeholder="Поиск по названию..." th:value="${buildFilter.query}" style="flex:1; min-width:220px;">
+
+    <!--<select class="select" name="cpuBrand" style="min-width:180px;">
+      <option value="" th:selected="${buildFilter.processor() == null || buildFilter.processor() == ''}">CPU: любой</option>
+      <option th:each="brand : ${cpuBrandOptions}"
+              th:value="${brand}"
+              th:text="${brand}"
+              th:selected="${buildFilter.processor() == brand}">
+      </option>
+    </select>-->
+
+    <!--<select class="select" name="socket" style="min-width:180px;">
+      <option value="" th:selected="${buildFilter.socket == null || buildFilter.socket == ''}">Сокет: любой</option>
+      <option th:each="socket : ${socketOptions}"
+              th:value="${socket.value}"
+              th:text="${socket.label}"
+              th:selected="${buildFilter.socket == socket.value}">
+      </option>
+    </select>-->
+
+    <input class="input" type="number" name="priceFrom" placeholder="Цена от" th:value="${buildFilter.priceFrom()}" style="max-width:140px;">
+    <input class="input" type="number" name="priceTo" placeholder="Цена до" th:value="${buildFilter.priceTo()}" style="max-width:140px;">
+
+    <button class="button button--primary" type="submit">Найти</button>
+    <a class="button button--ghost" th:href="@{/builds}">Сбросить</a>
+  </form>
+
+  <section class="cards-grid" th:if="${not #lists.isEmpty(builds)}">
+    <article class="card card--hover" th:each="build : ${builds}">
+      <a class="card__media" th:href="@{/builds/{id}(id=${build.getBuildId()})}">
+        <img th:src="${build.avatar}" th:alt="${build.getName()}">
+      </a>
+
+      <div class="card__body">
+        <div class="card__top">
+          <div>
+            <h3><a th:href="@{/builds/{id}(id=${build.getBuildId()})}" th:text="${build.name}">Build</a></h3>
+            <div class="card__meta" th:text="${#temporals.format(build.getCreationDate(), 'dd.MM.yyyy')}">01.01.2026</div>
+          </div>
+          <span class="badge badge--green" th:text="${build.getFilledSlots()} + '/' + ${slotDefinitions.size()}">0/8</span>
+        </div>
+
+        <div class="card__stats">
+          <span class="badge">
+            Цена: <b th:text="${#numbers.formatDecimal(build.getPrice(), 0, 'COMMA', 0, 'POINT')} + ' BYN'">0 BYN</b>
+          </span>
+        </div>
+
+        <div class="card__actions">
+          <a class="button button--ghost button--sm" th:href="@{/builds/{id}(id=${build.getBuildId()})}">Подробнее</a>
+          <a class="button button--ghost button--sm" th:href="@{/builds/{id}/edit(id=${build.getBuildId()})}">Изменить</a>
+        </div>
+      </div>
+    </article>
+  </section>
+
+  <div class="empty-state" th:if="${#lists.isEmpty(builds)}">
+    Сборки не найдены.
+  </div>
+
+  <div class="pagination" th:if="${totalPages > 1}">
+    <a th:if="${currentPage > 1}"
+       th:href="@{/builds(page=${currentPage - 1}, query=${buildFilter.query}, cpuBrand=${buildFilter.processor()}, priceMin=${buildFilter.priceFrom()}, priceMax=${buildFilter.priceTo()})}">
+      ←
+    </a>
+
+    <a th:each="p : ${#numbers.sequence(1, totalPages)}"
+       th:classappend="${p == currentPage} ? ' is-active'"
+       th:text="${p}"
+       th:href="@{/builds(page=${p}, query=${buildFilter.query}, cpuBrand=${buildFilter.processor()}, priceMin=${buildFilter.priceFrom()}, priceMax=${buildFilter.priceTo()})}">
+    </a>
+
+    <a th:if="${currentPage < totalPages}"
+       th:href="@{/builds(page=${currentPage + 1}, query=${buildFilter.query}, cpuBrand=${buildFilter.processor()}, priceMin=${buildFilter.priceFrom()}, priceMax=${buildFilter.priceTo()})}">
+      →
+    </a>
+  </div>
+</main>
+
+<div th:replace="~{fragments/footer :: footer}"></div>
+<script th:src="@{/assets/js/ui.js}"></script>
+</body>
+</html>

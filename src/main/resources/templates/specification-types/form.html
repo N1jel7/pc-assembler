@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org" th:attr="data-page=${activePage}">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title th:text="${pageTitle}">Тип характеристики</title>
+  <link rel="stylesheet" th:href="@{/assets/css/styles.css}">
+</head>
+<body>
+<div th:replace="~{fragments/header :: header(${activePage})}"></div>
+
+<main class="container page-shell">
+  <section class="page-hero">
+    <div>
+      <p class="eyebrow" th:text="${mode == 'create' ? 'Создание' : 'Редактирование'}">Создание</p>
+      <h1 th:text="${pageTitle}">Тип характеристики</h1>
+      <p>Простой и чистый экран без пересветов и лишнего шума.</p>
+    </div>
+
+    <div class="header-actions">
+      <a class="button button--ghost" th:href="@{/specification-types}">← Назад</a>
+
+      <form th:if="${mode == 'edit'}"
+            th:action="@{'/specification-types/' + ${specificationTypeForm.id} + '/delete'}"
+            method="post">
+        <button class="button button--danger" type="submit"
+                onclick="return confirm('Удалить тип характеристики?')">Удалить</button>
+      </form>
+    </div>
+  </section>
+
+  <section class="panel">
+    <div class="panel__body">
+      <form class="form"
+            th:object="${specificationTypeForm}"
+            th:attr="action=${mode == 'create' ? '/specification-types/create' : '/specification-types/' + specificationTypeForm.id + '/edit'}"
+            method="post">
+
+        <!--<input type="hidden" th:field="*{id}">-->
+
+        <div class="field">
+          <label for="spec-name">Название</label>
+          <input class="input" id="spec-name" type="text" th:field="*{name}" required>
+        </div>
+
+        <div class="field">
+          <label for="spec-description">Описание</label>
+          <textarea class="textarea" id="spec-description" th:field="*{description}" required></textarea>
+        </div>
+
+        <div class="form-actions">
+          <button class="button button--primary" type="submit">Сохранить</button>
+          <a class="button button--ghost" th:href="@{/specification-types}">Отмена</a>
+        </div>
+      </form>
+    </div>
+  </section>
+</main>
+
+<div th:replace="~{fragments/footer :: footer}"></div>
+<script th:src="@{/assets/js/ui.js}"></script>
+</body>
+</html>

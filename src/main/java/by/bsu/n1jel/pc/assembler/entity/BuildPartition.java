@@ -14,12 +14,12 @@ public class BuildPartition {
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
 
-    @ToString.Exclude // TODO временно
-    @ManyToOne(cascade = CascadeType.ALL)
+    @ToString.Exclude
+    @ManyToOne(cascade = {CascadeType.PERSIST, CascadeType.REFRESH})
     private Build build;
 
     @ToString.Exclude // TODO временно
-    @ManyToOne(optional = false)
+    @ManyToOne(cascade = {CascadeType.PERSIST, CascadeType.REFRESH}, optional = false)
     private Component component;
 
     @Column(name = "quantity", nullable = false)

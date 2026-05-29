@@ -6,9 +6,9 @@ import by.bsu.n1jel.pc.assembler.dto.request.edit.ComponentEditRequestDto;
 import by.bsu.n1jel.pc.assembler.dto.request.edit.ComponentTypeEditRequestDto;
 import by.bsu.n1jel.pc.assembler.dto.response.ComponentInfoResponseDto;
 import by.bsu.n1jel.pc.assembler.dto.response.ComponentTypeInfoResponseDto;
-import by.bsu.n1jel.pc.assembler.dto.request.search.ComponentSearchFilterRequestDto;
+import by.bsu.n1jel.pc.assembler.dto.request.search.ComponentFilterRequestDto;
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 
 import java.util.List;
 
@@ -16,11 +16,17 @@ public interface ComponentService {
 
     // SEARCH
 
-    Page<ComponentInfoResponseDto> findComponentsBySearchFilter(ComponentSearchFilterRequestDto requestDto, Pageable pageable);
+    Page<ComponentInfoResponseDto> findComponentsBySearchFilter(ComponentFilterRequestDto requestDto, Integer pageNumber);
 
     // COMPONENTS
 
+    String getComponentTypeNameById(Long componentTypeId);
+
+    List<ComponentInfoResponseDto> getLatestComponents();
+
     List<ComponentInfoResponseDto> getAllComponents();
+
+    Page<ComponentInfoResponseDto> getComponentsByPage(Integer pageNumber);
 
     ComponentInfoResponseDto getComponentById(Long componentId);
 
@@ -44,4 +50,9 @@ public interface ComponentService {
 
     ComponentTypeInfoResponseDto deleteComponentTypeById(Long componentTypeId);
 
+    // OTHER
+
+    List<String> getAllProcessorProducers();
+
+    Integer getAllComponentTypesSize();
 }

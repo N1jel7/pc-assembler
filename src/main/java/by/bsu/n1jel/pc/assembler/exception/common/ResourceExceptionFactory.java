@@ -19,7 +19,7 @@ public class ResourceExceptionFactory {
     }
 
     public static ResourceNotFoundException componentTypeNotFoundException(Long id){
-        return new ResourceNotFoundException(id, "Component id = %s not found".formatted(id));
+        return new ResourceNotFoundException(id, "Component type id = %s not found".formatted(id));
     }
 
     public static ResourceNotFoundException producerNotFoundException(Long id){

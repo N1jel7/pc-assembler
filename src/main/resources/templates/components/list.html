@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org" th:attr="data-page=${activePage}">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title th:text="${pageTitle}">Компоненты</title>
+  <link rel="stylesheet" th:href="@{/assets/css/styles.css}">
+</head>
+<body>
+<div th:replace="~{fragments/header :: header(${activePage})}"></div>
+
+<main class="container page-shell">
+  <section class="page-hero">
+    <div>
+      <p class="eyebrow">Каталог</p>
+      <h1>Компоненты</h1>
+      <p>Поиск по названию, производителю, типу, наличию и цене.</p>
+    </div>
+    <div class="header-actions">
+      <a class="button button--ghost" th:href="@{/components/create}">+ Создать компонент</a>
+      <a class="button button--primary" th:href="@{/builds/create}">+ Собрать ПК</a>
+    </div>
+  </section>
+
+  <div th:if="${selectionMode}" class="alert">
+    Режим выбора включён:
+    <b th:text="${selectedSlotLabel}">Слот</b>.
+    После выбора ты вернёшься обратно в сборку.
+  </div>
+
+  <form class="toolbar toolbar--panel" method="get" th:action="@{/components}">
+    <input class="input" type="text" name="query" placeholder="Поиск..." th:value="${componentFilter.query()}" style="flex:1; min-width:220px;">
+
+    <select class="select" name="producerId" style="min-width:220px;">
+      <option value="" th:selected="${componentFilter.producer() == null || componentFilter.producer() == ''}">Все производители</option>
+      <option th:each="producer : ${producers}"
+              th:value="${producer.getId()}"
+              th:text="${producer.getName() + ' — ' + producer.getCountry()}"
+              th:selected="${componentFilter.producer() == producer.getId()}">
+      </option>
+    </select>
+
+    <select class="select" name="componentType" style="min-width:200px;">
+      <option value="" th:selected="${componentFilter.componentType == null || componentFilter.componentType == ''}">Все типы</option>
+      <option th:each="type : ${componentTypes}"
+              th:value="${type.id()}"
+              th:text="${type.name()}"
+              th:selected="${componentFilter.componentType == type.id()}">
+      </option>
+    </select>
+
+    <select class="select" name="inStock" style="min-width:170px;">
+      <option value="yes" th:selected="${componentFilter.inStock == 1}">В наличии</option>
+      <option value="no" th:selected="${componentFilter.inStock == 0}">Нет в наличии</option>
+    </select>
+
+    <input class="input" type="number" name="priceMin" placeholder="Цена от" th:value="${componentFilter.priceFrom()}" style="max-width:140px;">
+    <input class="input" type="number" name="priceMax" placeholder="Цена до" th:value="${componentFilter.priceTo()}" style="max-width:140px;">
+
+    <input type="hidden" name="selectionMode" th:value="${selectionMode}">
+    <input type="hidden" name="selectedSlotKey" th:value="${selectedSlotKey}">
+    <input type="hidden" name="selectedSlotLabel" th:value="${selectedSlotLabel}">
+    <input type="hidden" name="selectedSlotType" th:value="${selectedSlotType}">
+    <input type="hidden" name="buildId" th:value="${buildId}">
+    <input type="hidden" name="returnUrl" th:value="${returnUrl}">
+
+    <button class="button button--primary" type="submit">Найти</button>
+    <a class="button button--ghost" th:href="@{/components}">Сбросить</a>
+  </form>
+
+  <section class="cards-grid" th:if="${not #lists.isEmpty(components)}">
+    <article class="card card--hover" th:each="component : ${components}">
+      <a class="card__media" th:href="@{/components/{id}(id=${component.id})}">
+        <img th:src="${component.avatar}" th:alt="${component.name}">
+      </a>
+
+      <div class="card__body">
+        <div class="card__top">
+          <div>
+            <h3><a th:href="@{/components/{id}(id=${component.id})}" th:text="${component.name}">Component</a></h3>
+            <div class="card__meta" th:text="${component.getProducerName()}">Producer</div>
+          </div>
+          <span class="badge badge--accent" th:text="${component.getComponentTypeName()}">Type</span>
+        </div>
+
+        <div class="card__stats">
+          <span class="badge">
+            Цена: <b th:text="${#numbers.formatDecimal(component.price, 0, 'COMMA', 0, 'POINT')} + ' BYN'">0 BYN</b>
+          </span>
+          <span class="badge">
+            Склад: <b th:text="${component.stockQuantity}">0</b>
+          </span>
+        </div>
+
+        <div class="card__actions" th:if="${!selectionMode}">
+          <a class="button button--ghost button--sm" th:href="@{/components/{id}(id=${component.id})}">Подробнее</a>
+          <a class="button button--ghost button--sm" th:href="@{/components/{id}/edit(id=${component.id})}">Изменить</a>
+        </div>
+
+        <form class="card__actions" th:if="${selectionMode}"
+              th:action="@{/builds/{buildId}/partitions/component(buildId=${buildId}, slotKey=${selectedSlotKey})}"
+              method="post">
+          <input type="hidden" name="componentId" th:value="${component.id}">
+          <input type="hidden" name="returnUrl" th:value="${returnUrl}">
+          <button class="button button--primary button--sm" type="submit">Выбрать</button>
+          <a class="button button--ghost button--sm" th:href="@{/components/{id}(id=${component.id})}">Подробнее</a>
+        </form>
+      </div>
+    </article>
+  </section>
+
+  <div class="empty-state" th:if="${#lists.isEmpty(components)}">
+    Ничего не найдено. Попробуй другой поиск или сбрось фильтры.
+  </div>
+
+  <div class="pagination" th:if="${totalPages > 1}">
+    <a th:if="${currentPage > 1}"
+       th:href="@{/components(page=${currentPage - 1}, query=${componentFilter.query()}, producerId=${componentFilter.producer()}, componentType=${componentFilter.componentType}, inStock=${componentFilter.inStock}, priceMin=${componentFilter.priceFrom()}, priceMax=${componentFilter.priceTo()}, selectionMode=${selectionMode}, selectedSlotKey=${selectedSlotKey}, selectedSlotLabel=${selectedSlotLabel}, selectedSlotType=${selectedSlotType}, buildId=${buildId}, returnUrl=${returnUrl})}">
+      ←
+    </a>
+
+    <a th:each="p : ${#numbers.sequence(1, totalPages)}"
+       th:classappend="${p == currentPage} ? ' is-active'"
+       th:text="${p}"
+       th:href="@{/components(page=${p}, query=${componentFilter.query()}, producerId=${componentFilter.producer()}, componentType=${componentFilter.componentType}, inStock=${componentFilter.inStock}, priceMin=${componentFilter.priceFrom()}, priceMax=${componentFilter.priceTo()}, selectionMode=${selectionMode}, selectedSlotKey=${selectedSlotKey}, selectedSlotLabel=${selectedSlotLabel}, selectedSlotType=${selectedSlotType}, buildId=${buildId}, returnUrl=${returnUrl})}">
+    </a>
+
+    <a th:if="${currentPage < totalPages}"
+       th:href="@{/components(page=${currentPage + 1}, query=${componentFilter.query()}, producerId=${componentFilter.producer()}, componentType=${componentFilter.componentType}, inStock=${componentFilter.inStock}, priceMin=${componentFilter.priceFrom()}, priceMax=${componentFilter.priceTo()}, selectionMode=${selectionMode}, selectedSlotKey=${selectedSlotKey}, selectedSlotLabel=${selectedSlotLabel}, selectedSlotType=${selectedSlotType}, buildId=${buildId}, returnUrl=${returnUrl})}">
+      →
+    </a>
+  </div>
+</main>
+
+<div th:replace="~{fragments/footer :: footer}"></div>
+<script th:src="@{/assets/js/ui.js}"></script>
+</body>
+</html>

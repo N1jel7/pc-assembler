@@ -1,0 +1,227 @@
+<!doctype html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org" th:attr="data-page=${activePage}">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title th:text="${pageTitle}">Сборка</title>
+  <link rel="stylesheet" th:href="@{/assets/css/styles.css}">
+</head>
+<body>
+<div th:replace="~{fragments/header :: header(${activePage})}"></div>
+
+<main class="container page-shell">
+  <section class="page-hero">
+    <div>
+      <p class="eyebrow" th:text="${mode == 'create' ? 'Создание' : 'Редактирование'}">Создание</p>
+      <h1 th:text="${pageTitle}">Сборка</h1>
+      <p>Имя сборки и компоненты по слотам.</p>
+    </div>
+
+    <div class="header-actions">
+      <a class="button button--ghost" th:href="@{/builds}">← Назад</a>
+
+      <form th:if="${mode == 'edit'}"
+            th:action="@{'/builds/' + ${buildId} + '/delete'}"
+            method="post">
+        <button class="button button--danger" type="submit"
+                onclick="return confirm('Удалить сборку?')">Удалить</button>
+      </form>
+    </div>
+  </section>
+
+  <form class="form-grid"
+        data-build-form
+        th:object="${buildForm}"
+        th:attr="action=${mode == 'create' ? '/builds/create' : '/builds/' + buildId + '/edit'}"
+        method="post">
+
+    <section class="panel">
+      <div class="panel__head">
+        <div>
+          <h2 class="panel__title">Поля сборки</h2>
+          <p class="panel__subtitle">Сначала задай название, потом наполни слоты.</p>
+        </div>
+      </div>
+
+      <div class="panel__body form">
+        <div class="field">
+          <label for="build-name">Название сборки</label>
+          <input class="input" id="build-name" type="text" th:field="*{name}" required>
+        </div>
+
+        <div class="detail-grid">
+          <div class="info-tile">
+            <span>Общая цена</span>
+            <strong id="build-preview-total-text" th:text="${totalPrice}">0 BYN</strong>
+          </div>
+          <div class="info-tile">
+            <span>Заполнено слотов</span>
+            <strong id="build-preview-filled-text" th:text="${filledSlots} + '/' + ${slotDefinitions.size()}">0/0</strong>
+          </div>
+        </div>
+
+        <div class="form-actions">
+          <button class="button button--primary" type="submit">Сохранить</button>
+          <a class="button button--ghost" th:href="@{/builds}">Отмена</a>
+        </div>
+      </div>
+    </section>
+
+    <aside class="panel">
+      <div class="panel__head">
+        <div>
+          <h2 class="panel__title">Предпросмотр</h2>
+          <p class="panel__subtitle">Название и итог обновляются на лету.</p>
+        </div>
+      </div>
+
+      <div class="panel__body">
+        <div class="preview-box">
+          <img id="build-preview-avatar"
+               th:src="${defaultAvatar}"
+               alt="Preview">
+
+          <div class="preview-box__body">
+            <strong id="build-preview-name"
+                    th:text="${buildForm.name != null && !buildForm.name.isBlank() ? buildForm.name : 'Новая сборка'}">
+              Новая сборка
+            </strong>
+
+            <div class="card__meta">
+              Заполнено: <b id="build-preview-filled" th:text="${filledSlots} + '/' + ${slotDefinitions.size()}">0/0</b>
+            </div>
+
+            <div class="card__stats">
+              <span class="badge">
+                Итого: <b id="build-preview-total" th:text="${totalPrice}">0 BYN</b>
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <section style="grid-column: 1 / -1;">
+      <div class="page-hero">
+        <div>
+          <p class="eyebrow">Слоты сборки</p>
+          <h2 style="margin:0;">Компоненты по типам</h2>
+          <p th:if="${mode == 'create'}">
+            Сначала сохрани сборку, затем сможешь привязывать компоненты к слотам.
+          </p>
+        </div>
+      </div>
+
+      <div class="alert" th:if="${mode == 'create'}">
+        В режиме создания слоты пока пустые. После сохранения сборки откроется редактирование.
+      </div>
+
+      <div class="slot-grid" th:if="${mode == 'edit'}">
+        <article class="slot-card js-build-slot"
+                 th:each="slot : ${slotDefinitions}"
+                 th:with="partition=${partitionsByType[slot.id]}"
+                 th:attr="data-slot-id=${slot.id},
+                    data-partition-id=${partition != null ? partition.buildPartitionId : ''},
+                    data-component-type-id=${slot.id},
+                    data-fixed=${partition != null ? partition.fixedQuantity : false},
+                    data-has-component=${partition != null && partition.componentId != null},
+                    data-component-price=${partition != null && partition.componentPrice != null ? partition.componentPrice : 0},
+                    data-quantity=${partition != null && partition.quantity != null ? partition.quantity : 1}">
+
+          <div class="slot-card__head">
+            <div>
+              <h3 th:text="${slot.name}">Slot</h3>
+              <div class="card__meta">Слот компонента</div>
+            </div>
+            <span class="badge badge--accent" th:text="${slot.name}">Type</span>
+          </div>
+
+          <div class="slot-card__body">
+            <a class="slot-selected slot-selected--link"
+               th:if="${partition != null && partition.componentId != null}"
+               th:href="@{/components/{id}(id=${partition.componentId})}">
+              <img th:src="${partition.componentImage}" th:alt="${partition.componentName}">
+              <div>
+                <strong th:text="${partition.componentName}">Component</strong>
+                <div class="card__meta" th:text="${partition.producerName}">Producer</div>
+                <div class="card__meta">
+                  Цена: <b th:text="${partition.componentPrice}">0</b>
+                </div>
+                <div class="card__meta">
+                  Количество: <b class="js-slot-qty-label" th:text="${partition.quantity}">1</b>
+                </div>
+                <div class="card__meta">
+                  Сумма: <b class="js-slot-subtotal" th:text="${partition.subtotal}">0</b>
+                </div>
+              </div>
+            </a>
+
+            <a class="slot-empty slot-selected--link"
+               th:if="${partition == null || partition.componentId == null}"
+               th:href="@{/components/select(buildId=${buildId}, componentType=${slot.id}, returnUrl=${returnUrl})}">
+              Компонент не выбран. Нажмите, чтобы выбрать.
+            </a>
+
+            <div class="qty-box">
+              <label style="min-width:92px; color:var(--muted);">Кол-во</label>
+              <input class="input js-slot-qty"
+                     type="number"
+                     min="1"
+                     th:attr="max=${partition != null && partition.maxQuantity != null ? partition.maxQuantity : 1},
+                        value=${partition != null && partition.quantity != null ? partition.quantity : 1}"
+                     th:disabled="${partition != null && partition.fixedQuantity}">
+            </div>
+
+            <div class="form-actions">
+              <a class="button button--primary button--sm"
+                 th:href="@{/components/select(buildId=${buildId}, componentType=${slot.id}, returnUrl=${returnUrl})}">
+    <span th:text="${partition != null && partition.componentId != null ? 'Изменить компонент' : 'Выбрать компонент'}">
+      Выбрать компонент
+    </span>
+              </a>
+
+              <button class="button button--danger button--sm"
+                      type="submit"
+                      th:if="${partition != null}"
+                      th:form="${'delete-partition-form-' + partition.buildPartitionId}">
+                Удалить
+              </button>
+            </div>
+          </div>
+        </article>
+      </div>
+
+      <div class="slot-grid" th:if="${mode == 'create'}">
+        <article class="slot-card" th:each="slot : ${slotDefinitions}">
+          <div class="slot-card__head">
+            <div>
+              <h3 th:text="${slot.name}">Slot</h3>
+              <div class="card__meta">Слот компонента</div>
+            </div>
+            <span class="badge badge--accent" th:text="${slot.name()}">Type</span>
+          </div>
+
+          <div class="slot-card__body">
+            <div class="slot-empty">
+              После сохранения сборки здесь можно будет выбрать компонент.
+            </div>
+          </div>
+        </article>
+      </div>
+    </section>
+  </form>
+</main>
+
+<th:block th:if="${mode == 'edit'}" th:each="slot : ${slotDefinitions}">
+  <form th:if="${partitionsByType[slot.id] != null}"
+        th:id="${'delete-partition-form-' + partitionsByType[slot.id].buildPartitionId}"
+        th:action="@{/builds/{buildId}/partitions/delete/{buildPartitionId}(buildId=${buildId}, buildPartitionId=${partitionsByType[slot.id].buildPartitionId})}"
+        method="post"
+        style="display:none;">
+  </form>
+</th:block>
+
+<div th:replace="~{fragments/footer :: footer}"></div>
+<script th:src="@{/assets/js/ui.js}"></script>
+</body>
+</html>

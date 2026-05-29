@@ -9,9 +9,12 @@ import java.util.List;
 public class ComponentInfoResponseDto {
         private Long id;
         private String name;
-        private Long producer;
-        private Long componentType;
+        private Long producerId;
+        private String producerName;
+        private Long componentTypeId;
+        private String componentTypeName;
         private BigDecimal price;
         private Integer stockQuantity;
         private List<SpecificationInfoResponseDto> specifications;
+        private String avatar;
 }

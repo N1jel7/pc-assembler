@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org" th:attr="data-page=${activePage}">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title th:text="${pageTitle}">Производитель</title>
+  <link rel="stylesheet" th:href="@{/assets/css/styles.css}">
+</head>
+<body>
+<div th:replace="~{fragments/header :: header(${activePage})}"></div>
+
+<main class="container page-shell">
+  <section class="page-hero">
+    <div>
+      <p class="eyebrow" th:text="${mode == 'create' ? 'Создание' : 'Редактирование'}">Создание</p>
+      <h1 th:text="${pageTitle}">Производитель</h1>
+      <p>Фото добавляются отдельно от стилизованной аватарки.</p>
+    </div>
+
+    <div class="header-actions">
+      <a class="button button--ghost" th:href="@{/producers}">← Назад</a>
+
+      <form th:if="${mode == 'edit'}"
+            th:action="@{'/producers/' + ${producer.id} + '/delete'}"
+            method="post">
+        <button class="button button--danger" type="submit"
+                onclick="return confirm('Удалить производителя?')">Удалить</button>
+      </form>
+    </div>
+  </section>
+
+  <form class="form-grid"
+        th:object="${producer}"
+        th:attr="action=${mode == 'create' ? '/producers/create' : '/producers/' + producer.id + '/edit'}"
+        method="post"
+        enctype="multipart/form-data">
+
+    <section class="panel">
+      <div class="panel__body form">
+        <input type="hidden" th:field="*{id}">
+
+        <div class="field">
+          <label for="producer-name">Имя</label>
+          <input class="input" id="producer-name" type="text" th:field="*{name}" required>
+        </div>
+
+        <div class="field">
+          <label for="producer-country">Страна</label>
+          <input class="input" id="producer-country" type="text" th:field="*{country}" required>
+        </div>
+
+        <div class="panel" style="padding:16px;" data-upload-widget="producer">
+          <div class="upload-section">
+            <div class="upload-section__head">
+              <div>
+                <h3 class="panel__title" style="font-size:1.05rem; margin:0;">Фотографии производителя</h3>
+                <div class="upload-hint">До 5 файлов, без выбора главного изображения.</div>
+              </div>
+              <div class="badge badge--accent js-upload-count" th:text="${#lists.size(existingImages)} + '/5'">0/5</div>
+            </div>
+
+            <input class="js-file-input input" id="producer-images" type="file" name="images" accept="image/*" multiple>
+            <div class="js-file-preview upload-gallery"></div>
+          </div>
+        </div>
+
+        <div class="form-actions">
+          <button class="button button--primary" type="submit">Сохранить</button>
+          <a class="button button--ghost" th:href="@{/producers}">Отмена</a>
+        </div>
+      </div>
+    </section>
+
+    <aside class="preview-box">
+      <img th:src="${producer.avatar}" alt="Preview">
+      <div class="preview-box__body">
+        <strong th:text="${producer.name != null ? producer.name : 'Новый производитель'}">Новый производитель</strong>
+        <div class="card__meta" th:text="${producer.country != null ? producer.country : ''}"></div>
+      </div>
+
+      <div class="panel" style="margin-top:16px; padding:16px;">
+        <div class="upload-section__head" style="padding:0 0 10px;">
+          <div>
+            <h3 class="panel__title" style="font-size:1.05rem; margin:0;">Уже загруженные изображения</h3>
+            <div class="upload-hint">Сними галочку, чтобы удалить фото.</div>
+          </div>
+        </div>
+
+        <div class="upload-gallery" th:if="${not #lists.isEmpty(existingImages)}">
+          <article class="upload-item" th:each="image, stat : ${existingImages}" th:attr="data-image-src=${image.url}, data-image-title='Фото ' + ${stat.count}">
+            <img class="upload-item__img" th:src="${image.url}" th:alt="'Фото ' + ${stat.count}">
+            <div class="upload-item__bar">
+              <div class="upload-item__name" th:text="'Фото ' + ${stat.count}">Фото 1</div>
+              <div class="upload-item__actions">
+                <label class="upload-item__btn" style="width:auto; padding:0 10px;">
+                  <input type="checkbox" name="keptImageIds" th:value="${image.id}" checked>
+                </label>
+                <button class="upload-item__btn" type="button" data-image-view>👁</button>
+              </div>
+            </div>
+          </article>
+        </div>
+
+        <div class="empty-state" th:if="${#lists.isEmpty(existingImages)}">
+          Фото ещё не загружены.
+        </div>
+      </div>
+    </aside>
+  </form>
+</main>
+
+<div th:replace="~{fragments/footer :: footer}"></div>
+<script th:src="@{/assets/js/ui.js}"></script>
+</body>
+</html>

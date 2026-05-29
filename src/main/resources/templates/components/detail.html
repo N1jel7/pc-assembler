@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org" th:attr="data-page=${activePage}">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title th:text="${pageTitle}">Компонент</title>
+  <link rel="stylesheet" th:href="@{/assets/css/styles.css}">
+</head>
+<body>
+<div th:replace="~{fragments/header :: header(${activePage})}"></div>
+
+<main class="container page-shell">
+  <section class="page-hero">
+    <div>
+      <p class="eyebrow">Детали компонента</p>
+      <h1 th:text="${component.name}">Component name</h1>
+      <p>
+        <span th:text="${component.componentTypeName}">Type</span>
+        ·
+        <span th:text="${producer.name}">Producer</span>
+      </p>
+    </div>
+    <div class="header-actions">
+      <a class="button button--ghost" th:href="@{/components}">← Назад</a>
+      <a class="button button--primary" th:href="@{/components/{id}/edit(id=${component.id})}">Редактировать</a>
+    </div>
+  </section>
+
+  <section class="detail-layout">
+    <div class="detail-image">
+      <img th:src="${component.avatar}" th:alt="${component.name}">
+    </div>
+
+    <div class="detail-box">
+      <h2 th:text="${component.name}">Component</h2>
+      <p>
+        <span th:text="${producer.name}">Producer</span>
+        ·
+        <span th:text="${producer.country}">Country</span>
+      </p>
+
+      <div class="detail-grid">
+        <div class="info-tile"><span>Тип</span><strong th:text="${component.componentTypeName}">Type</strong></div>
+        <div class="info-tile"><span>Цена</span><strong th:text="${#numbers.formatDecimal(component.price, 0, 'COMMA', 0, 'POINT')} + ' ₽'">0 ₽</strong></div>
+        <div class="info-tile"><span>Склад</span><strong th:text="${component.stockQuantity}">0</strong></div>
+        <div class="info-tile"><span>Фото</span><strong th:text="${#lists.size(componentPhotos)}">0</strong></div>
+      </div>
+
+      <h3 style="margin-top:20px;">Характеристики</h3>
+      <div class="spec-table">
+        <div class="spec-row" th:each="spec : ${specifications}">
+          <b th:text="${spec.name()}">Spec</b>
+          <span th:text="${spec.value}">Value</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section style="margin-top:18px;">
+    <div class="page-hero">
+      <div>
+        <p class="eyebrow">Фотографии</p>
+        <h2 style="margin:0;">Дополнительные изображения</h2>
+      </div>
+    </div>
+
+    <div class="upload-gallery" th:if="${not #lists.isEmpty(componentPhotos)}">
+      <article class="upload-item" th:each="photo, stat : ${componentPhotos}" th:attr="data-image-src=${photo.url}, data-image-title='Фото ' + ${stat.count}">
+        <img class="upload-item__img" th:src="${photo.url}" th:alt="'Фото ' + ${stat.count}">
+        <div class="upload-item__bar">
+          <div class="upload-item__name" th:text="'Фото ' + ${stat.count}">Фото 1</div>
+          <div class="upload-item__actions">
+            <button class="upload-item__btn" type="button" data-image-view>👁</button>
+          </div>
+        </div>
+      </article>
+    </div>
+
+    <div class="empty-state" th:if="${#lists.isEmpty(componentPhotos)}">
+      Дополнительные фото отсутствуют.
+    </div>
+  </section>
+</main>
+
+<div th:replace="~{fragments/footer :: footer}"></div>
+<script th:src="@{/assets/js/ui.js}"></script>
+</body>
+</html>

@@ -17,8 +17,9 @@ public class ComponentType {
     @Column(name = "name", nullable = false)
     private String name;
 
-    @ToString.Exclude // TODO временно
-    @ManyToOne
-    @JoinColumn(name = "parentType")
-    private ComponentType parentType;
+    @Column(name = "max_amount", nullable = false)
+    private Integer maxAmount;
+
+    @Column(name = "min_amount", nullable = false)
+    private Integer minAmount;
 }
