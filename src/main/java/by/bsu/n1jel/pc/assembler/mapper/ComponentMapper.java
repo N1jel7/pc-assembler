@@ -9,6 +9,7 @@ import by.bsu.n1jel.pc.assembler.entity.*;
 import by.bsu.n1jel.pc.assembler.dto.response.ImageInfoResponseDto;
 import by.bsu.n1jel.pc.assembler.service.utils.DefaultImageUtil;
 import by.bsu.n1jel.pc.assembler.service.utils.ImageUrlUtil;
+import by.bsu.n1jel.pc.assembler.service.utils.SpecificationValueUtil;
 import org.mapstruct.*;
 
 import java.util.ArrayList;
@@ -30,6 +31,7 @@ public interface ComponentMapper {
 
     List<ComponentInfoResponseDto> mapToResponseDto(List<Component> components);
 
+    @Mapping(target = "requiredSpecificationTypeIds", source = "requiredSpecifications", qualifiedByName = "getSpecificationTypeIds")
     ComponentTypeInfoResponseDto mapToTypeResponseDto(ComponentType componentType);
 
     List<ComponentTypeInfoResponseDto> mapToTypeResponseDto(List<ComponentType> componentTypes);
@@ -40,6 +42,8 @@ public interface ComponentMapper {
     @Mapping(target = "images", ignore = true)
     Component updateComponent(@MappingTarget Component component, ComponentEditRequestDto requestDto);
 
+    @Mapping(target = "code", ignore = true)
+    @Mapping(target = "requiredSpecifications", ignore = true)
     ComponentType updateComponentType(@MappingTarget ComponentType componentType, ComponentTypeEditRequestDto requestDto);
 
     @Named("getSpecificationInfoResponseDtoList")
@@ -48,17 +52,29 @@ public interface ComponentMapper {
 
         if(specifications != null) {
             for (Specification spec : specifications) {
+                SpecificationType type = spec.getType();
                 specificationInfoResponseDtos.add(
                         new SpecificationInfoResponseDto(
                                 spec.getId(),
-                                spec.getType().getId(),
-                                spec.getType().getName(),
-                                spec.getType().getDescription(),
-                                spec.getValue()));
+                                type.getId(),
+                                type.getName(),
+                                type.getDescription(),
+                                spec.getValue(),
+                                type.getCode(),
+                                type.getUnit(),
+                                SpecificationValueUtil.display(type.getValueType(), spec.getValue(), type.getUnit())));
             }
             return specificationInfoResponseDtos;
         }
         return null;
+    }
+
+    @Named("getSpecificationTypeIds")
+    default List<Long> getSpecificationTypeIds(List<SpecificationType> specificationTypes) {
+        if (specificationTypes == null) {
+            return List.of();
+        }
+        return specificationTypes.stream().map(SpecificationType::getId).toList();
     }
 
     @Named("getProducerId")

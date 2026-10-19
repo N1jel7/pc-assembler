@@ -1,5 +1,6 @@
 package by.bsu.n1jel.pc.assembler.entity;
 
+import by.bsu.n1jel.pc.assembler.entity.enums.SpecValueType;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -25,4 +26,18 @@ public class SpecificationType {
 
     @Column(name = "description")
     private String description;
+
+    /**
+     * Машинный код для проверок совместимости. У пользовательских типов отсутствует.
+     */
+    @Column(name = "code", unique = true)
+    private String code;
+
+    @Builder.Default
+    @Enumerated(EnumType.STRING)
+    @Column(name = "value_type", nullable = false)
+    private SpecValueType valueType = SpecValueType.STRING;
+
+    @Column(name = "unit")
+    private String unit;
 }

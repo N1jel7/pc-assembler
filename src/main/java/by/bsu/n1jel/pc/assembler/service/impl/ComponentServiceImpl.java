@@ -14,12 +14,14 @@ import by.bsu.n1jel.pc.assembler.dto.response.ImageInfoResponseDto;
 import by.bsu.n1jel.pc.assembler.entity.*;
 import by.bsu.n1jel.pc.assembler.entity.enums.ObjectType;
 import by.bsu.n1jel.pc.assembler.exception.ImageValidationException;
+import by.bsu.n1jel.pc.assembler.exception.InvalidRequestException;
 import by.bsu.n1jel.pc.assembler.mapper.ComponentMapper;
 import by.bsu.n1jel.pc.assembler.repository.*;
 import by.bsu.n1jel.pc.assembler.service.api.ComponentService;
 import by.bsu.n1jel.pc.assembler.service.api.ImageService;
 import by.bsu.n1jel.pc.assembler.service.utils.ImageUrlUtil;
 import by.bsu.n1jel.pc.assembler.service.utils.OverallUtil;
+import by.bsu.n1jel.pc.assembler.service.utils.SpecificationValueUtil;
 import org.springframework.web.multipart.MultipartFile;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -28,7 +30,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import static by.bsu.n1jel.pc.assembler.exception.common.ResourceExceptionFactory.*;
 
@@ -91,27 +95,25 @@ public class ComponentServiceImpl implements ComponentService {
                 .stockQuantity(requestDto.getStockQuantity())
                 .build();
 
-        createdComponent = componentRepository.save(createdComponent);
-
-
-        List<Specification> createdSpecifications = new ArrayList<>();
         List<SpecificationCreateRequestDto> requestedSpecifications =
                 requestDto.getSpecifications() != null ? requestDto.getSpecifications() : List.of();
+        Set<Long> usedTypeIds = new HashSet<>();
 
         for (SpecificationCreateRequestDto spec : requestedSpecifications) {
             if (spec.getSpecificationTypeId() == null) {
                 // пустая строка характеристики из формы
                 continue;
             }
-            createdSpecifications.add(Specification.builder()
-                    .type(findSpecificationTypeById(spec.getSpecificationTypeId()))
+            SpecificationType type = findSpecificationTypeById(spec.getSpecificationTypeId());
+            if (!usedTypeIds.add(type.getId())) {
+                throw new InvalidRequestException("Характеристика «%s» указана дважды".formatted(type.getName()));
+            }
+            createdComponent.getSpecifications().add(Specification.builder()
+                    .type(type)
                     .component(createdComponent)
-                    .value(spec.getValue())
+                    .value(SpecificationValueUtil.normalize(type, spec.getValue()))
                     .build());
-
         }
-
-        createdComponent.setSpecifications(createdSpecifications);
 
         return componentMapper.mapToResponseDto(componentRepository.save(createdComponent));
     }
@@ -206,9 +208,7 @@ public class ComponentServiceImpl implements ComponentService {
         }
 
         if (requestDto.getSpecifications() != null) {
-            List<Specification> existingSpecs = componentFromDb.getSpecifications() != null
-                    ? componentFromDb.getSpecifications()
-                    : List.of();
+            List<Specification> existingSpecs = componentFromDb.getSpecifications();
 
             List<Specification> updatedSpecs = new ArrayList<>();
 
@@ -221,23 +221,31 @@ public class ComponentServiceImpl implements ComponentService {
                 Specification existingSpec = findExistingSpecification(existingSpecs, updatedSpecs, dtoSpec);
 
                 if (existingSpec != null) {
-                    existingSpec.setValue(dtoSpec.getValue());
+                    existingSpec.setValue(SpecificationValueUtil.normalize(existingSpec.getType(), dtoSpec.getValue()));
                     updatedSpecs.add(existingSpec);
                 } else {
                     // REST исторически передаёт id типа в поле id, форма — в specificationTypeId
                     Long typeId = dtoSpec.getSpecificationTypeId() != null
                             ? dtoSpec.getSpecificationTypeId()
                             : dtoSpec.getId();
+                    SpecificationType type = findSpecificationTypeById(typeId);
+                    if (updatedSpecs.stream().anyMatch(spec -> spec.getType().getId().equals(type.getId()))) {
+                        throw new InvalidRequestException("Характеристика «%s» указана дважды".formatted(type.getName()));
+                    }
                     Specification newSpec = Specification.builder()
                             .component(componentFromDb)
-                            .type(findSpecificationTypeById(typeId))
-                            .value(dtoSpec.getValue())
+                            .type(type)
+                            .value(SpecificationValueUtil.normalize(type, dtoSpec.getValue()))
                             .build();
                     updatedSpecs.add(newSpec);
                 }
             }
 
-            componentFromDb.setSpecifications(updatedSpecs);
+            // коллекция с orphanRemoval: меняем на месте, удалённые строки Hibernate удалит сам
+            existingSpecs.removeIf(spec -> updatedSpecs.stream().noneMatch(updated -> updated == spec));
+            updatedSpecs.stream()
+                    .filter(updated -> existingSpecs.stream().noneMatch(spec -> spec == updated))
+                    .forEach(existingSpecs::add);
         }
 
         return componentFromDb;

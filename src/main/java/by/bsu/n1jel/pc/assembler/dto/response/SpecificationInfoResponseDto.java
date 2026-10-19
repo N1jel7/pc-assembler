@@ -5,6 +5,9 @@ public record SpecificationInfoResponseDto(
         Long specificationTypeId,
         String name,
         String description,
-        String value
+        String value,
+        String code,
+        String unit,
+        String displayValue
 ) {
 }

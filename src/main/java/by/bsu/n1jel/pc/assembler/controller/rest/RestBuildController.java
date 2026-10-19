@@ -6,7 +6,9 @@ import by.bsu.n1jel.pc.assembler.dto.request.edit.BuildEditRequestDto;
 import by.bsu.n1jel.pc.assembler.dto.request.edit.BuildPartitionEditRequestDto;
 import by.bsu.n1jel.pc.assembler.dto.response.BuildInfoResponseDto;
 import by.bsu.n1jel.pc.assembler.dto.response.BuildPartitionInfoResponseDto;
+import by.bsu.n1jel.pc.assembler.dto.response.CompatibilityReportDto;
 import by.bsu.n1jel.pc.assembler.service.api.BuildService;
+import by.bsu.n1jel.pc.assembler.service.api.CompatibilityService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -21,8 +23,18 @@ import java.util.List;
 public class RestBuildController {
 
     private final BuildService buildService;
+    private final CompatibilityService compatibilityService;
 
     // BUILDS ENDPOINTS
+
+    @Operation(
+            summary = "Check build compatibility",
+            description = "Checks socket, memory, case, power and other compatibility of build components"
+    )
+    @GetMapping("/{buildId}/compatibility")
+    CompatibilityReportDto checkCompatibility(@PathVariable Long buildId) {
+        return compatibilityService.checkBuild(buildId);
+    }
 
     @Operation(
             summary = "Get all builds",

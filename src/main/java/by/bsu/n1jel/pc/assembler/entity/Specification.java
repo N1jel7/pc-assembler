@@ -23,7 +23,8 @@ public class Specification {
     @ManyToOne(optional = false)
     private SpecificationType type;
 
-    @ToString.Exclude // TODO временно
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
     @ManyToOne(optional = false)
     private Component component;
 

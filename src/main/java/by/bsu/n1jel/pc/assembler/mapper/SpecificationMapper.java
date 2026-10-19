@@ -26,6 +26,7 @@ public interface SpecificationMapper {
 
     Specification updateSpecification(@MappingTarget Specification specification, SpecificationEditRequestDto requestDto);
 
+    @Mapping(target = "code", ignore = true)
     SpecificationType updateSpecificationType(@MappingTarget SpecificationType specificationType, SpecificationTypeEditRequestDto requestDto);
 
     @Named("getSpecificationTypeId")

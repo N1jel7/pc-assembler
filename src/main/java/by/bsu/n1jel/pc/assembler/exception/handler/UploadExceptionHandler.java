@@ -2,6 +2,7 @@ package by.bsu.n1jel.pc.assembler.exception.handler;
 
 import by.bsu.n1jel.pc.assembler.dto.response.ErrorInfoResponseDto;
 import by.bsu.n1jel.pc.assembler.exception.ImageValidationException;
+import by.bsu.n1jel.pc.assembler.exception.InvalidRequestException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Value;
@@ -48,8 +49,8 @@ public class UploadExceptionHandler {
         return respond(HttpStatus.CONTENT_TOO_LARGE, message, request, response);
     }
 
-    @ExceptionHandler(ImageValidationException.class)
-    public ResponseEntity<ErrorInfoResponseDto> handleImageValidation(ImageValidationException ex,
+    @ExceptionHandler({ImageValidationException.class, InvalidRequestException.class})
+    public ResponseEntity<ErrorInfoResponseDto> handleImageValidation(RuntimeException ex,
                                                                       HttpServletRequest request,
                                                                       HttpServletResponse response) {
         return respond(HttpStatus.BAD_REQUEST, ex.getMessage(), request, response);

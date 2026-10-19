@@ -3,6 +3,7 @@ package by.bsu.n1jel.pc.assembler.controller;
 import by.bsu.n1jel.pc.assembler.dto.request.create.SpecificationTypeCreateRequestDto;
 import by.bsu.n1jel.pc.assembler.dto.request.edit.SpecificationTypeEditRequestDto;
 import by.bsu.n1jel.pc.assembler.dto.request.search.SpecificationTypeFilterRequestDto;
+import by.bsu.n1jel.pc.assembler.entity.enums.SpecValueType;
 import by.bsu.n1jel.pc.assembler.dto.response.SpecificationTypeInfoResponseDto;
 import by.bsu.n1jel.pc.assembler.service.api.SpecificationService;
 import lombok.RequiredArgsConstructor;
@@ -42,6 +43,7 @@ public class SpecificationTypeController {
         model.addAttribute("pageTitle", "Создать тип характеристики");
         model.addAttribute("mode", "create");
         model.addAttribute("specificationTypeForm", new SpecificationTypeCreateRequestDto());
+        model.addAttribute("valueTypes", SpecValueType.values());
 
         return "specification-types/form";
     }
@@ -60,6 +62,7 @@ public class SpecificationTypeController {
         model.addAttribute("pageTitle", "Редактировать тип характеристики");
         model.addAttribute("mode", "edit");
         model.addAttribute("specificationTypeForm", infoDto);
+        model.addAttribute("valueTypes", SpecValueType.values());
 
         return "specification-types/form";
     }
@@ -68,7 +71,8 @@ public class SpecificationTypeController {
     public String edit(@PathVariable Long id, @ModelAttribute SpecificationTypeEditRequestDto requestDto) {
 
         // TODO Переделать, убрать  создание DTO
-        specificationService.editSpecificationType(new SpecificationTypeEditRequestDto(id, requestDto.name(), requestDto.description()));
+        specificationService.editSpecificationType(new SpecificationTypeEditRequestDto(
+                id, requestDto.name(), requestDto.description(), requestDto.valueType(), requestDto.unit()));
         return "redirect:/specification-types";
     }
 

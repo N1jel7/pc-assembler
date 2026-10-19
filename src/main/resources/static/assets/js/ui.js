@@ -417,18 +417,64 @@
       });
     };
 
-    addBtn.addEventListener('click', () => {
+    const typeSelect = document.getElementById('component-type');
+    const requiredSpecIds = () => {
+      const option = typeSelect?.selectedOptions[0];
+      return (option?.dataset.requiredSpecs || '').split(',').filter(Boolean);
+    };
+
+    // подсказка формата значения по типу характеристики
+    const updateHint = (row) => {
+      const select = row.querySelector('select');
+      const input = row.querySelector('input');
+      const option = select?.selectedOptions[0];
+      if (!input || !option) return;
+
+      const unit = option.dataset.unit ? `, ${option.dataset.unit}` : '';
+      const hints = {
+        NUMBER: `Число${unit}`,
+        LIST: 'Несколько значений через запятую',
+        BOOLEAN: 'да / нет'
+      };
+      input.placeholder = hints[option.dataset.valueType] || `Значение${unit}`;
+      input.inputMode = option.dataset.valueType === 'NUMBER' ? 'decimal' : 'text';
+
+      const required = requiredSpecIds().includes(select.value);
+      input.required = required;
+      row.classList.toggle('is-required', required);
+    };
+
+    const addRow = (typeId = '') => {
       const index = list.querySelectorAll('.js-spec-row').length;
       const html = template.innerHTML.replaceAll('__INDEX__', String(index));
       const wrapper = document.createElement('div');
       wrapper.innerHTML = html.trim();
       const row = wrapper.firstElementChild;
       list.appendChild(row);
+      if (typeId) row.querySelector('select').value = typeId;
       reindex();
       bindRemoveButtons();
+      updateHint(row);
+      return row;
+    };
+
+    // при выборе типа компонента добавляем строки для обязательных характеристик, которых ещё нет
+    const addRequiredRows = () => {
+      const present = [...list.querySelectorAll('.js-spec-row select')].map((select) => select.value);
+      requiredSpecIds()
+        .filter((id) => !present.includes(id))
+        .forEach((id) => addRow(id));
+      list.querySelectorAll('.js-spec-row').forEach(updateHint);
+    };
+
+    addBtn.addEventListener('click', () => addRow());
+    list.addEventListener('change', (e) => {
+      if (e.target.matches('select')) updateHint(e.target.closest('.js-spec-row'));
     });
+    typeSelect?.addEventListener('change', addRequiredRows);
 
     bindRemoveButtons();
+    addRequiredRows();
   }
 
   function enhanceImageViews() {

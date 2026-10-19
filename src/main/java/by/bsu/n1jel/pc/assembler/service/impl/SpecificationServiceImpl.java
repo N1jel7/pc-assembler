@@ -6,6 +6,8 @@ import by.bsu.n1jel.pc.assembler.dto.request.edit.SpecificationTypeEditRequestDt
 import by.bsu.n1jel.pc.assembler.dto.request.search.SpecificationTypeFilterRequestDto;
 import by.bsu.n1jel.pc.assembler.dto.response.SpecificationTypeInfoResponseDto;
 import by.bsu.n1jel.pc.assembler.entity.SpecificationType;
+import by.bsu.n1jel.pc.assembler.entity.enums.SpecValueType;
+import by.bsu.n1jel.pc.assembler.exception.InvalidRequestException;
 import by.bsu.n1jel.pc.assembler.mapper.SpecificationMapper;
 import by.bsu.n1jel.pc.assembler.repository.SpecificationTypeRepository;
 import by.bsu.n1jel.pc.assembler.service.api.SpecificationService;
@@ -27,6 +29,10 @@ public class SpecificationServiceImpl implements SpecificationService {
     private final SpecificationTypeRepository specsTypeRepository;
     private final SpecificationMapper specsMapper;
     private final SearchDao searchDao;
+
+    private static String blankToNull(String value) {
+        return value == null || value.isBlank() ? null : value.trim();
+    }
 
     private SpecificationType findSpecificationTypeById(Long specificationId) {
         return specsTypeRepository.findById(specificationId)
@@ -53,6 +59,8 @@ public class SpecificationServiceImpl implements SpecificationService {
     public SpecificationTypeInfoResponseDto createSpecificationType(SpecificationTypeCreateRequestDto requestDto) {
         SpecificationType specification = SpecificationType.builder()
                 .name(requestDto.getName())
+                .valueType(requestDto.getValueType() != null ? requestDto.getValueType() : SpecValueType.STRING)
+                .unit(blankToNull(requestDto.getUnit()))
                 .build();
 
         if (requestDto.getDescription() != null && !requestDto.getDescription().isEmpty()) {
@@ -66,6 +74,14 @@ public class SpecificationServiceImpl implements SpecificationService {
     @Transactional
     public SpecificationTypeInfoResponseDto editSpecificationType(SpecificationTypeEditRequestDto requestDto) {
         SpecificationType specificationFromDb = findSpecificationTypeById(requestDto.id());
+
+        // от типа значения системной характеристики зависят проверки совместимости
+        if (specificationFromDb.getCode() != null && requestDto.valueType() != null
+                && requestDto.valueType() != specificationFromDb.getValueType()) {
+            throw new InvalidRequestException("Тип значения системной характеристики «%s» менять нельзя"
+                    .formatted(specificationFromDb.getName()));
+        }
+
         specificationFromDb = specsMapper.updateSpecificationType(specificationFromDb, requestDto);
         return specsMapper.mapTypeToResponse(specsTypeRepository.save(specificationFromDb));
     }
@@ -74,6 +90,10 @@ public class SpecificationServiceImpl implements SpecificationService {
     @Transactional
     public SpecificationTypeInfoResponseDto deleteSpecificationTypeById(Long specificationId) {
         SpecificationType specificationFromDb = findSpecificationTypeById(specificationId);
+        if (specificationFromDb.getCode() != null) {
+            throw new InvalidRequestException("Характеристику «%s» использует проверка совместимости, её нельзя удалить"
+                    .formatted(specificationFromDb.getName()));
+        }
         SpecificationTypeInfoResponseDto responseDto = specsMapper.mapTypeToResponse(specificationFromDb);
         specsTypeRepository.delete(specificationFromDb);
         return responseDto;

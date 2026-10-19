@@ -12,9 +12,11 @@ import by.bsu.n1jel.pc.assembler.entity.Build;
 import by.bsu.n1jel.pc.assembler.entity.BuildPartition;
 import by.bsu.n1jel.pc.assembler.dto.response.ImageInfoResponseDto;
 import by.bsu.n1jel.pc.assembler.entity.Component;
+import by.bsu.n1jel.pc.assembler.entity.ComponentType;
 import by.bsu.n1jel.pc.assembler.entity.Image;
 import by.bsu.n1jel.pc.assembler.entity.enums.ObjectType;
 import by.bsu.n1jel.pc.assembler.exception.ImageValidationException;
+import by.bsu.n1jel.pc.assembler.exception.InvalidRequestException;
 import by.bsu.n1jel.pc.assembler.mapper.BuildMapper;
 import by.bsu.n1jel.pc.assembler.repository.BuildPartitionRepository;
 import by.bsu.n1jel.pc.assembler.repository.BuildRepository;
@@ -115,7 +117,30 @@ public class BuildServiceImpl implements BuildService {
     public BuildInfoResponseDto editBuildInfo(BuildEditRequestDto requestDto) {
         Build buildFromDb = findBuildById(requestDto.getBuildId());
         buildMapper.updateBuild(buildFromDb, requestDto);
+
+        if (requestDto.getQuantities() != null) {
+            requestDto.getQuantities().forEach((partitionId, quantity) -> {
+                BuildPartition partition = findBuildPartitionById(partitionId);
+                if (!partition.getBuild().getId().equals(buildFromDb.getId())) {
+                    throw new InvalidRequestException("Компонент id = %s не входит в эту сборку".formatted(partitionId));
+                }
+                if (quantity != null) {
+                    validateQuantity(partition.getComponent(), quantity);
+                    partition.setQuantity(quantity);
+                }
+            });
+        }
+
         return buildMapper.mapToResponseDto(buildRepository.save(buildFromDb));
+    }
+
+    private static void validateQuantity(Component component, Integer quantity) {
+        ComponentType type = component.getComponentType();
+        if (quantity == null || quantity < type.getMinAmount() || quantity > type.getMaxAmount()) {
+            throw new InvalidRequestException(type.getMinAmount().equals(type.getMaxAmount())
+                    ? "«%s»: в сборке может быть только %d шт.".formatted(type.getName(), type.getMaxAmount())
+                    : "«%s»: количество должно быть от %d до %d".formatted(type.getName(), type.getMinAmount(), type.getMaxAmount()));
+        }
     }
 
     @Override
@@ -196,6 +221,7 @@ public class BuildServiceImpl implements BuildService {
                 .build(findBuildById(requestDto.getBuildId()))
                 .quantity(requestDto.getQuantity())
                 .build();
+        validateQuantity(createdBuildPartition.getComponent(), createdBuildPartition.getQuantity());
 
         return buildMapper.mapToPartitionResponseDto(partitionRepository.save(createdBuildPartition));
     }
@@ -206,6 +232,7 @@ public class BuildServiceImpl implements BuildService {
         BuildPartition buildPartitionFromDb = findBuildPartitionById(requestDto.buildPartitionId());
         buildPartitionFromDb = buildMapper.updatePartition(buildPartitionFromDb, requestDto);
         editDifficultBuildPartitionInfo(buildPartitionFromDb, requestDto);
+        validateQuantity(buildPartitionFromDb.getComponent(), buildPartitionFromDb.getQuantity());
 
         return buildMapper.mapToPartitionResponseDto(partitionRepository.save(buildPartitionFromDb));
     }

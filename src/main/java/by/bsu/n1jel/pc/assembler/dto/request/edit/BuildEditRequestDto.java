@@ -6,6 +6,8 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldDefaults;
 
+import java.util.Map;
+
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -13,4 +15,13 @@ import lombok.experimental.FieldDefaults;
 public class BuildEditRequestDto {
     Long buildId;
     String name;
+    /**
+     * id партиции → количество (форма шлёт quantities[id]=2).
+     */
+    Map<Long, Integer> quantities;
+
+    public BuildEditRequestDto(Long buildId, String name) {
+        this.buildId = buildId;
+        this.name = name;
+    }
 }

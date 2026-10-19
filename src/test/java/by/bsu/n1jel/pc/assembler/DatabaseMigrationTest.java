@@ -22,7 +22,7 @@ class DatabaseMigrationTest extends AbstractIntegrationTest {
     @Test
     void allChangesetsApplied() {
         Integer applied = jdbcTemplate.queryForObject("SELECT COUNT(*) FROM databasechangelog", Integer.class);
-        assertThat(applied).isEqualTo(6);
+        assertThat(applied).isEqualTo(7);
     }
 
     @Test

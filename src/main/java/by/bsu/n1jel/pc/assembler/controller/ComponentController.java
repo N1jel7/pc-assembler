@@ -5,6 +5,8 @@ import by.bsu.n1jel.pc.assembler.dto.request.edit.ComponentEditRequestDto;
 import by.bsu.n1jel.pc.assembler.dto.request.search.ComponentFilterRequestDto;
 import by.bsu.n1jel.pc.assembler.dto.response.ComponentInfoResponseDto;
 import by.bsu.n1jel.pc.assembler.dto.response.ProducerInfoResponseDto;
+import by.bsu.n1jel.pc.assembler.dto.response.CompatibilityIssueDto;
+import by.bsu.n1jel.pc.assembler.service.api.CompatibilityService;
 import by.bsu.n1jel.pc.assembler.service.api.ComponentService;
 import by.bsu.n1jel.pc.assembler.service.api.ProducerService;
 import by.bsu.n1jel.pc.assembler.service.api.SpecificationService;
@@ -18,7 +20,9 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 
 @Slf4j
 @Controller
@@ -29,6 +33,7 @@ public class ComponentController {
     private final ComponentService componentService;
     private final ProducerService producerService;
     private final SpecificationService specificationService;
+    private final CompatibilityService compatibilityService;
 
     @GetMapping
     public String list(@ModelAttribute ComponentFilterRequestDto componentFilter,
@@ -40,7 +45,7 @@ public class ComponentController {
         model.addAttribute("activePage", "components");
         model.addAttribute("pageTitle", "Компоненты");
         model.addAttribute("componentFilter", componentFilter);
-        model.addAttribute("components", infoDto);
+        model.addAttribute("components", infoDto.getContent());
         model.addAttribute("producers", producerService.getAllProducers());
         model.addAttribute("componentTypes", componentService.getAllComponentTypes());
         model.addAttribute("currentPage", infoDto.getTotalPages() == 0 ? 1 : infoDto.getNumber() + 1);
@@ -66,10 +71,19 @@ public class ComponentController {
 
         Page<ComponentInfoResponseDto> infoDto = componentService.findComponentsBySearchFilter(componentFilter, page);
 
+        Map<Long, List<CompatibilityIssueDto>> candidateIssues = compatibilityService.checkCandidates(buildId,
+                infoDto.getContent().stream().map(ComponentInfoResponseDto::getId).toList());
+        // совместимые — первыми, порядок внутри групп сохраняется
+        List<ComponentInfoResponseDto> components = infoDto.getContent().stream()
+                .sorted(Comparator.comparing(component ->
+                        !candidateIssues.getOrDefault(component.getId(), List.of()).isEmpty()))
+                .toList();
+
         model.addAttribute("activePage", "components");
         model.addAttribute("pageTitle", "Выбор компонента");
         model.addAttribute("componentFilter", componentFilter);
-        model.addAttribute("components", infoDto);
+        model.addAttribute("components", components);
+        model.addAttribute("candidateIssues", candidateIssues);
         model.addAttribute("producers", producerService.getAllProducers());
         model.addAttribute("componentTypes", componentService.getAllComponentTypes());
         model.addAttribute("currentPage", infoDto.getTotalPages() == 0 ? 1 : infoDto.getNumber() + 1);

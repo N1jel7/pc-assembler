@@ -50,7 +50,7 @@
       <div class="spec-table">
         <div class="spec-row" th:each="spec : ${specifications}">
           <b th:text="${spec.name()}">Spec</b>
-          <span th:text="${spec.value}">Value</span>
+          <span th:text="${spec.displayValue()}">Value</span>
         </div>
       </div>
     </div>

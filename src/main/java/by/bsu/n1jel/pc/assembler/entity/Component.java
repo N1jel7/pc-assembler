@@ -39,13 +39,10 @@ public class Component {
     @Column(name = "stock_quantity", nullable = false)
     private Integer stockQuantity;
 
-    @ToString.Exclude // TODO временно
-    @OneToMany(cascade = CascadeType.ALL)
-    @JoinTable(
-            name = "components_specifications",
-            joinColumns = @JoinColumn(name = "component_id")
-    )
-    private List<Specification> specifications;
+    @ToString.Exclude
+    @Builder.Default
+    @OneToMany(mappedBy = "component", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Specification> specifications = new ArrayList<>();
 
     @ToString.Exclude
     @Builder.Default

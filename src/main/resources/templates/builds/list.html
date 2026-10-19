@@ -64,10 +64,14 @@
           <span class="badge badge--green" th:text="${build.getFilledSlots()} + '/' + ${slotDefinitions.size()}">0/8</span>
         </div>
 
-        <div class="card__stats">
+        <div class="card__stats" th:with="report=${compatibilityByBuild[build.getBuildId()]}">
           <span class="badge">
             Цена: <b th:text="${#numbers.formatDecimal(build.getPrice(), 0, 'COMMA', 0, 'POINT')} + ' BYN'">0 BYN</b>
           </span>
+          <span class="badge badge--danger" th:if="${report.errors() > 0}"
+                th:text="'✕ Несовместимо: ' + ${report.errors()}">✕ Несовместимо</span>
+          <span class="badge badge--warning" th:if="${report.errors() == 0 and !report.complete()}">○ Не завершена</span>
+          <span class="badge badge--green" th:if="${report.errors() == 0 and report.complete()}">✓ Совместима</span>
         </div>
 
         <div class="card__actions">

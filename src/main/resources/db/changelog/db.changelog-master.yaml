@@ -11,3 +11,5 @@ databaseChangeLog:
       file: db/changelog/changeset/v4/test-data.sql
   - include:
       file: db/changelog/changeset/v5/images-rework.sql
+  - include:
+      file: db/changelog/changeset/v6/compatibility-specs.sql

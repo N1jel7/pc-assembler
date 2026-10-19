@@ -1,5 +1,6 @@
 package by.bsu.n1jel.pc.assembler.dto.request.create;
 
+import by.bsu.n1jel.pc.assembler.entity.enums.SpecValueType;
 import lombok.AccessLevel;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -11,4 +12,6 @@ import lombok.experimental.FieldDefaults;
 public class SpecificationTypeCreateRequestDto {
     String name;
     String description;
+    SpecValueType valueType;
+    String unit;
 }

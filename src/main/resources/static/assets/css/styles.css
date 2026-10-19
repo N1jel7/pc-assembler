@@ -807,6 +807,24 @@ site-footer {
   margin-bottom: 16px;
 }
 
+.js-spec-row.is-required select {
+  border-color: rgba(110, 231, 255, 0.35);
+}
+
+.js-spec-row.is-required {
+  position: relative;
+}
+
+.js-spec-row.is-required::before {
+  content: "*";
+  position: absolute;
+  left: 6px;
+  top: 50%;
+  translate: 0 -50%;
+  color: var(--accent);
+  font-weight: 700;
+}
+
 .alert--error {
   display: flex;
   align-items: flex-start;
@@ -1109,6 +1127,119 @@ site-footer {
 
 .image-modal .carousel__nav {
   opacity: 1;
+}
+
+/* ===== Build compatibility ===== */
+.compat {
+  --compat-color: var(--accent-3);
+  display: grid;
+  gap: 14px;
+  padding: 18px 20px;
+  border-radius: 22px;
+  border: 1px solid var(--line);
+  border-left: 4px solid var(--compat-color);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.025));
+}
+
+.compat--error {
+  --compat-color: var(--danger);
+}
+
+.compat--incomplete,
+.compat--warning {
+  --compat-color: var(--warning);
+}
+
+.compat__head {
+  display: flex;
+  gap: 14px;
+  align-items: center;
+}
+
+.compat__status {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  font-weight: 800;
+  color: var(--bg);
+  background: var(--compat-color);
+}
+
+.compat__title {
+  margin: 0;
+  font-size: 1.1rem;
+}
+
+.compat__summary {
+  margin: 2px 0 0;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.compat__list {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.compat__item {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.03);
+  line-height: 1.4;
+}
+
+.compat__icon {
+  flex: none;
+  width: 20px;
+  text-align: center;
+  font-weight: 800;
+}
+
+.compat__item--error {
+  background: rgba(239, 68, 68, 0.1);
+}
+
+.compat__item--error .compat__icon {
+  color: var(--danger);
+}
+
+.compat__item--incomplete .compat__icon,
+.compat__item--warning .compat__icon {
+  color: var(--warning);
+}
+
+.compat__list--slot {
+  margin-top: 10px;
+  font-size: 0.88rem;
+}
+
+.slot-card--error {
+  border-color: rgba(239, 68, 68, 0.55);
+}
+
+.slot-card--warning {
+  border-color: rgba(245, 158, 11, 0.45);
+}
+
+.badge--danger {
+  background: rgba(239, 68, 68, 0.14);
+  border-color: rgba(239, 68, 68, 0.35);
+  color: #fecaca;
+}
+
+.badge--warning {
+  background: rgba(245, 158, 11, 0.12);
+  border-color: rgba(245, 158, 11, 0.3);
+  color: #fde68a;
 }
 
 /* ===== Photo carousel (detail pages) ===== */

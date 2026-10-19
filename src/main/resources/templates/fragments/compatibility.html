@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<body>
+
+<!-- Итог проверки совместимости сборки. report — CompatibilityReportDto -->
+<section th:fragment="report(report)"
+         class="compat"
+         th:with="status=${report.errors() > 0 ? 'error' : (!report.complete() ? 'incomplete' : (report.warnings() > 0 ? 'warning' : 'ok'))}"
+         th:classappend="${'compat--' + status}"
+         aria-labelledby="compat-title">
+  <div class="compat__head">
+    <span class="compat__status" aria-hidden="true"
+          th:text="${status == 'ok' ? '✓' : (status == 'error' ? '✕' : (status == 'incomplete' ? '○' : '!'))}">✓</span>
+    <div>
+      <h3 class="compat__title" id="compat-title"
+          th:text="${status == 'ok' ? 'Всё совместимо'
+                   : (status == 'error' ? 'Есть несовместимости'
+                   : (status == 'incomplete' ? 'Сборка не завершена' : 'Совместима, есть замечания'))}">
+        Всё совместимо
+      </h3>
+      <p class="compat__summary" th:if="${status == 'ok'}">
+        Проверены сокет, память, корпус, питание, накопители и количество.
+      </p>
+      <p class="compat__summary" th:unless="${status == 'ok'}"
+         th:text="'Ошибок: ' + ${report.errors()} + ' · Замечаний: ' + ${report.warnings()}">
+        Ошибок: 0 · Замечаний: 0
+      </p>
+    </div>
+  </div>
+
+  <ul class="compat__list" th:unless="${#lists.isEmpty(report.issues())}">
+    <li class="compat__item" th:each="issue : ${report.issues()}"
+        th:classappend="${'compat__item--' + #strings.toLowerCase(issue.severity().name())}">
+      <span class="compat__icon" aria-hidden="true"
+            th:text="${issue.severity().name() == 'ERROR' ? '✕' : (issue.severity().name() == 'INCOMPLETE' ? '○' : '!')}">!</span>
+      <span th:text="${issue.message()}">Сообщение</span>
+    </li>
+  </ul>
+</section>
+
+<!-- Проблемы конкретного компонента в карточке слота. issues — список CompatibilityIssueDto или null -->
+<ul th:fragment="slotIssues(issues)" class="compat__list compat__list--slot" th:if="${issues != null and not #lists.isEmpty(issues)}">
+  <li class="compat__item" th:each="issue : ${issues}"
+      th:classappend="${'compat__item--' + #strings.toLowerCase(issue.severity().name())}">
+    <span class="compat__icon" aria-hidden="true"
+          th:text="${issue.severity().name() == 'ERROR' ? '✕' : '!'}">!</span>
+    <span th:text="${issue.message()}">Сообщение</span>
+  </li>
+</ul>
+
+</body>
+</html>

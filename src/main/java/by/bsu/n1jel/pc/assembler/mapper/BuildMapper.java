@@ -40,14 +40,18 @@ public interface BuildMapper {
 
     List<BuildPartitionInfoResponseDto> mapToPartitionResponseDto(List<BuildPartition> buildPartitions);
 
+    @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "build", ignore = true)
     @Mapping(target = "component", ignore = true)
     @Mapping(source = "quantity", target = "quantity")
     BuildPartition updatePartition(@MappingTarget BuildPartition buildPartition, BuildPartitionEditRequestDto requestDto);
 
+    @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "images", ignore = true)
+    @Mapping(target = "buildPartitions", ignore = true)
+    @Mapping(target = "creationDate", ignore = true)
     Build updateBuild(@MappingTarget Build build, BuildEditRequestDto requestDto);
 
     @Named("getComponentTypeName")

@@ -35,10 +35,17 @@
         <div class="info-tile"><span>Общая цена</span><strong th:text="${#numbers.formatDecimal(totalPrice, 0, 'COMMA', 0, 'POINT')} + ' BYN'">0 BYN</strong></div>
         <div class="info-tile"><span>Компонентов</span><strong th:text="${#lists.size(buildItems)} + '/' + ${maxComponentTypeAmount}">0/8</strong></div>
         <div class="info-tile"><span>Фото</span><strong th:text="${#lists.size(buildPhotos)}">0</strong></div>
-        <div class="info-tile"><span>Статус</span><strong>Демо / черновик</strong></div>
+        <div class="info-tile"><span>Статус</span>
+          <strong th:text="${compatibility.errors() > 0 ? 'Есть несовместимости'
+                           : (!compatibility.complete() ? 'Не завершена' : 'Совместима')}">Совместима</strong>
+        </div>
       </div>
     </div>
   </section>
+
+  <div style="margin-top:18px;">
+    <section th:replace="~{fragments/compatibility :: report(${compatibility})}"></section>
+  </div>
 
   <section style="margin-top:18px;">
     <div class="page-hero">
@@ -49,7 +56,10 @@
     </div>
 
     <div class="slot-grid">
-      <article class="slot-card" th:each="item : ${buildItems}">
+      <article class="slot-card" th:each="item : ${buildItems}"
+               th:with="slotIssues=${issuesByComponent[item.componentId]},
+                        slotHasError=${slotIssues != null and slotIssues.?[severity().name() == 'ERROR'].size() > 0}"
+               th:classappend="${slotHasError ? 'slot-card--error' : (slotIssues != null ? 'slot-card--warning' : '')}">
         <div class="slot-card__head">
           <div>
             <h3 th:text="${item.componentTypeName}">Slot</h3>
@@ -72,6 +82,8 @@
         <div class="slot-empty" th:if="${item.componentId == null}">
           Компонент не выбран.
         </div>
+
+        <ul th:replace="~{fragments/compatibility :: slotIssues(${slotIssues})}"></ul>
       </article>
     </div>
   </section>

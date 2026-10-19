@@ -25,13 +25,14 @@
   <div th:if="${selectionMode}" class="alert">
     Режим выбора включён:
     <b th:text="${selectedSlotLabel}">Слот</b>.
-    После выбора ты вернёшься обратно в сборку.
+    После выбора ты вернёшься обратно в сборку. Совместимые со сборкой компоненты показаны первыми.
   </div>
 
-  <form class="toolbar toolbar--panel" method="get" th:action="@{/components}">
+  <form class="toolbar toolbar--panel" method="get"
+        th:action="@{${selectionMode ? '/components/select' : '/components'}}">
     <input class="input" type="text" name="query" placeholder="Поиск..." th:value="${componentFilter.query()}" style="flex:1; min-width:220px;">
 
-    <select class="select" name="producerId" style="min-width:220px;">
+    <select class="select" name="producer" style="min-width:220px;">
       <option value="" th:selected="${componentFilter.producer() == null || componentFilter.producer() == ''}">Все производители</option>
       <option th:each="producer : ${producers}"
               th:value="${producer.getId()}"
@@ -40,7 +41,9 @@
       </option>
     </select>
 
-    <select class="select" name="componentType" style="min-width:200px;">
+    <!-- в режиме выбора тип зафиксирован слотом -->
+    <input type="hidden" name="componentType" th:if="${selectionMode}" th:value="${componentFilter.componentType}">
+    <select class="select" name="componentType" style="min-width:200px;" th:disabled="${selectionMode}">
       <option value="" th:selected="${componentFilter.componentType == null || componentFilter.componentType == ''}">Все типы</option>
       <option th:each="type : ${componentTypes}"
               th:value="${type.id()}"
@@ -54,18 +57,18 @@
       <option value="no" th:selected="${componentFilter.inStock == 0}">Нет в наличии</option>
     </select>
 
-    <input class="input" type="number" name="priceMin" placeholder="Цена от" th:value="${componentFilter.priceFrom()}" style="max-width:140px;">
-    <input class="input" type="number" name="priceMax" placeholder="Цена до" th:value="${componentFilter.priceTo()}" style="max-width:140px;">
+    <input class="input" type="number" name="priceFrom" placeholder="Цена от" th:value="${componentFilter.priceFrom()}" style="max-width:140px;">
+    <input class="input" type="number" name="priceTo" placeholder="Цена до" th:value="${componentFilter.priceTo()}" style="max-width:140px;">
 
-    <input type="hidden" name="selectionMode" th:value="${selectionMode}">
-    <input type="hidden" name="selectedSlotKey" th:value="${selectedSlotKey}">
-    <input type="hidden" name="selectedSlotLabel" th:value="${selectedSlotLabel}">
-    <input type="hidden" name="selectedSlotType" th:value="${selectedSlotType}">
-    <input type="hidden" name="buildId" th:value="${buildId}">
-    <input type="hidden" name="returnUrl" th:value="${returnUrl}">
+    <th:block th:if="${selectionMode}">
+      <input type="hidden" name="buildId" th:value="${buildId}">
+      <input type="hidden" name="returnUrl" th:value="${returnUrl}">
+    </th:block>
 
     <button class="button button--primary" type="submit">Найти</button>
-    <a class="button button--ghost" th:href="@{/components}">Сбросить</a>
+    <a class="button button--ghost" th:if="${!selectionMode}" th:href="@{/components}">Сбросить</a>
+    <a class="button button--ghost" th:if="${selectionMode}"
+       th:href="@{/components/select(buildId=${buildId}, componentType=${componentFilter.componentType}, returnUrl=${returnUrl})}">Сбросить</a>
   </form>
 
   <section class="cards-grid" th:if="${not #lists.isEmpty(components)}">
@@ -97,14 +100,21 @@
           <a class="button button--ghost button--sm" th:href="@{/components/{id}/edit(id=${component.id})}">Изменить</a>
         </div>
 
-        <form class="card__actions" th:if="${selectionMode}"
-              th:action="@{/builds/{buildId}/partitions/component(buildId=${buildId}, slotKey=${selectedSlotKey})}"
-              method="post">
-          <input type="hidden" name="componentId" th:value="${component.id}">
-          <input type="hidden" name="returnUrl" th:value="${returnUrl}">
-          <button class="button button--primary button--sm" type="submit">Выбрать</button>
-          <a class="button button--ghost button--sm" th:href="@{/components/{id}(id=${component.id})}">Подробнее</a>
-        </form>
+        <th:block th:if="${selectionMode}" th:with="issues=${candidateIssues[component.id]}">
+          <span class="badge badge--green" th:if="${issues == null or #lists.isEmpty(issues)}">✓ Совместим со сборкой</span>
+          <ul th:replace="~{fragments/compatibility :: slotIssues(${issues})}"></ul>
+
+          <form class="card__actions"
+                th:action="@{/builds/{buildId}/partitions/component(buildId=${buildId}, slotKey=${selectedSlotKey})}"
+                method="post">
+            <input type="hidden" name="componentId" th:value="${component.id}">
+            <input type="hidden" name="returnUrl" th:value="${returnUrl}">
+            <button class="button button--sm" type="submit"
+                    th:classappend="${issues == null or #lists.isEmpty(issues) ? 'button--primary' : 'button--ghost'}"
+                    th:text="${issues == null or #lists.isEmpty(issues) ? 'Выбрать' : 'Выбрать всё равно'}">Выбрать</button>
+            <a class="button button--ghost button--sm" th:href="@{/components/{id}(id=${component.id})}">Подробнее</a>
+          </form>
+        </th:block>
       </div>
     </article>
   </section>
@@ -113,20 +123,21 @@
     Ничего не найдено. Попробуй другой поиск или сбрось фильтры.
   </div>
 
-  <div class="pagination" th:if="${totalPages > 1}">
+  <div class="pagination" th:if="${totalPages > 1}"
+       th:with="pageUrl=${selectionMode ? '/components/select' : '/components'}">
     <a th:if="${currentPage > 1}"
-       th:href="@{/components(page=${currentPage - 1}, query=${componentFilter.query()}, producerId=${componentFilter.producer()}, componentType=${componentFilter.componentType}, inStock=${componentFilter.inStock}, priceMin=${componentFilter.priceFrom()}, priceMax=${componentFilter.priceTo()}, selectionMode=${selectionMode}, selectedSlotKey=${selectedSlotKey}, selectedSlotLabel=${selectedSlotLabel}, selectedSlotType=${selectedSlotType}, buildId=${buildId}, returnUrl=${returnUrl})}">
+       th:href="@{${pageUrl}(page=${currentPage - 1}, query=${componentFilter.query()}, producer=${componentFilter.producer()}, componentType=${componentFilter.componentType}, inStock=${componentFilter.inStock}, priceFrom=${componentFilter.priceFrom()}, priceTo=${componentFilter.priceTo()}, buildId=${buildId}, returnUrl=${returnUrl})}">
       ←
     </a>
 
     <a th:each="p : ${#numbers.sequence(1, totalPages)}"
        th:classappend="${p == currentPage} ? ' is-active'"
        th:text="${p}"
-       th:href="@{/components(page=${p}, query=${componentFilter.query()}, producerId=${componentFilter.producer()}, componentType=${componentFilter.componentType}, inStock=${componentFilter.inStock}, priceMin=${componentFilter.priceFrom()}, priceMax=${componentFilter.priceTo()}, selectionMode=${selectionMode}, selectedSlotKey=${selectedSlotKey}, selectedSlotLabel=${selectedSlotLabel}, selectedSlotType=${selectedSlotType}, buildId=${buildId}, returnUrl=${returnUrl})}">
+       th:href="@{${pageUrl}(page=${p}, query=${componentFilter.query()}, producer=${componentFilter.producer()}, componentType=${componentFilter.componentType}, inStock=${componentFilter.inStock}, priceFrom=${componentFilter.priceFrom()}, priceTo=${componentFilter.priceTo()}, buildId=${buildId}, returnUrl=${returnUrl})}">
     </a>
 
     <a th:if="${currentPage < totalPages}"
-       th:href="@{/components(page=${currentPage + 1}, query=${componentFilter.query()}, producerId=${componentFilter.producer()}, componentType=${componentFilter.componentType}, inStock=${componentFilter.inStock}, priceMin=${componentFilter.priceFrom()}, priceMax=${componentFilter.priceTo()}, selectionMode=${selectionMode}, selectedSlotKey=${selectedSlotKey}, selectedSlotLabel=${selectedSlotLabel}, selectedSlotType=${selectedSlotType}, buildId=${buildId}, returnUrl=${returnUrl})}">
+       th:href="@{${pageUrl}(page=${currentPage + 1}, query=${componentFilter.query()}, producer=${componentFilter.producer()}, componentType=${componentFilter.componentType}, inStock=${componentFilter.inStock}, priceFrom=${componentFilter.priceFrom()}, priceTo=${componentFilter.priceTo()}, buildId=${buildId}, returnUrl=${returnUrl})}">
       →
     </a>
   </div>

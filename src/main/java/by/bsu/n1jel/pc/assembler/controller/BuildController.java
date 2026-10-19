@@ -6,7 +6,9 @@ import by.bsu.n1jel.pc.assembler.dto.request.edit.BuildEditRequestDto;
 import by.bsu.n1jel.pc.assembler.dto.request.search.BuildFilterRequestDto;
 import by.bsu.n1jel.pc.assembler.dto.response.BuildInfoResponseDto;
 import by.bsu.n1jel.pc.assembler.dto.response.BuildPartitionInfoResponseDto;
+import by.bsu.n1jel.pc.assembler.dto.response.CompatibilityReportDto;
 import by.bsu.n1jel.pc.assembler.service.api.BuildService;
+import by.bsu.n1jel.pc.assembler.service.api.CompatibilityService;
 import by.bsu.n1jel.pc.assembler.service.api.ComponentService;
 import by.bsu.n1jel.pc.assembler.service.utils.DefaultImageUtil;
 import by.bsu.n1jel.pc.assembler.service.utils.OverallUtil;
@@ -29,6 +31,13 @@ public class BuildController {
 
     private final BuildService buildService;
     private final ComponentService componentService;
+    private final CompatibilityService compatibilityService;
+
+    private void addCompatibility(Long buildId, Model model) {
+        CompatibilityReportDto report = compatibilityService.checkBuild(buildId);
+        model.addAttribute("compatibility", report);
+        model.addAttribute("issuesByComponent", CompatibilityService.issuesByComponent(report));
+    }
 
     @GetMapping
     public String list(@ModelAttribute BuildFilterRequestDto requestDto,
@@ -42,6 +51,9 @@ public class BuildController {
         model.addAttribute("pageTitle", "Сборки");
         model.addAttribute("buildFilter", requestDto);
         model.addAttribute("builds", result.getContent());
+        model.addAttribute("compatibilityByBuild", result.getContent().stream()
+                .collect(Collectors.toMap(BuildInfoResponseDto::getBuildId,
+                        build -> compatibilityService.checkBuild(build.getBuildId()))));
         model.addAttribute("cpuBrandOptions", componentService.getAllProcessorProducers());
 
         // TODO All sockets
@@ -73,6 +85,7 @@ public class BuildController {
         model.addAttribute("buildPhotos", build.getImages());
         model.addAttribute("totalPrice", build.getPrice());
         model.addAttribute("maxComponentTypeAmount", componentService.getAllComponentTypesSize());
+        addCompatibility(id, model);
 
         return "builds/detail";
     }
@@ -164,6 +177,7 @@ public class BuildController {
         model.addAttribute("filledSlots", build.getFilledSlots());
         model.addAttribute("existingImages", build.getImages());
         model.addAttribute("maxImages", OverallUtil.getMaxImagesSize());
+        addCompatibility(id, model);
 
         return "builds/form";
     }

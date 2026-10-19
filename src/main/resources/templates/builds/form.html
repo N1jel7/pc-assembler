@@ -106,6 +106,10 @@
       </div>
     </aside>
 
+    <div style="grid-column: 1 / -1;" th:if="${mode == 'edit'}">
+      <section th:replace="~{fragments/compatibility :: report(${compatibility})}"></section>
+    </div>
+
     <section style="grid-column: 1 / -1;">
       <div class="page-hero">
         <div>
@@ -124,7 +128,10 @@
       <div class="slot-grid" th:if="${mode == 'edit'}">
         <article class="slot-card js-build-slot"
                  th:each="slot : ${slotDefinitions}"
-                 th:with="partition=${partitionsByType[slot.id]}"
+                 th:with="partition=${partitionsByType[slot.id]},
+                          slotIssues=${partition != null ? issuesByComponent[partition.componentId] : null},
+                          slotHasError=${slotIssues != null and slotIssues.?[severity().name() == 'ERROR'].size() > 0}"
+                 th:classappend="${slotHasError ? 'slot-card--error' : (slotIssues != null ? 'slot-card--warning' : '')}"
                  th:attr="data-slot-id=${slot.id},
                     data-partition-id=${partition != null ? partition.buildPartitionId : ''},
                     data-component-type-id=${slot.id},
@@ -167,14 +174,20 @@
               Компонент не выбран. Нажмите, чтобы выбрать.
             </a>
 
-            <div class="qty-box">
-              <label style="min-width:92px; color:var(--muted);">Кол-во</label>
+            <ul th:replace="~{fragments/compatibility :: slotIssues(${slotIssues})}"></ul>
+
+            <div class="qty-box" th:if="${partition != null}">
+              <label style="min-width:92px; color:var(--muted);"
+                     th:for="${'qty-' + partition.buildPartitionId}">Кол-во</label>
               <input class="input js-slot-qty"
                      type="number"
-                     min="1"
-                     th:attr="max=${partition != null && partition.maxQuantity != null ? partition.maxQuantity : 1},
-                        value=${partition != null && partition.quantity != null ? partition.quantity : 1}"
-                     th:disabled="${partition != null && partition.fixedQuantity}">
+                     th:id="${'qty-' + partition.buildPartitionId}"
+                     th:name="${'quantities[' + partition.buildPartitionId + ']'}"
+                     th:attr="min=${partition.minQuantity != null ? partition.minQuantity : 1},
+                        max=${partition.maxQuantity != null ? partition.maxQuantity : 1},
+                        value=${partition.quantity != null ? partition.quantity : 1}"
+                     th:disabled="${partition.fixedQuantity}">
+              <span class="card__meta" th:unless="${partition.fixedQuantity}">сохраняется кнопкой «Сохранить»</span>
             </div>
 
             <div class="form-actions">

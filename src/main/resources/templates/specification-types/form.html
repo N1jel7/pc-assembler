@@ -48,6 +48,34 @@
           <textarea class="textarea" id="spec-description" th:field="*{description}" required></textarea>
         </div>
 
+        <th:block th:with="system=${mode == 'edit' and specificationTypeForm.code() != null}">
+          <div class="alert" th:if="${system}">
+            Системная характеристика <code th:text="${specificationTypeForm.code()}">socket</code>:
+            по ней проверяется совместимость, поэтому тип значения менять нельзя.
+          </div>
+
+          <div class="detail-grid">
+            <div class="field">
+              <label for="spec-value-type">Тип значения</label>
+              <select class="select" id="spec-value-type" name="valueType" th:disabled="${system}">
+                <option th:each="valueType : ${valueTypes}"
+                        th:value="${valueType}"
+                        th:selected="${mode == 'edit' and specificationTypeForm.valueType() == valueType}"
+                        th:text="${valueType.name() == 'STRING' ? 'Текст'
+                                 : valueType.name() == 'NUMBER' ? 'Число'
+                                 : valueType.name() == 'LIST' ? 'Список (через запятую)'
+                                 : 'Да / нет'}">Текст</option>
+              </select>
+            </div>
+
+            <div class="field">
+              <label for="spec-unit">Единица измерения</label>
+              <input class="input" id="spec-unit" type="text" name="unit" placeholder="Вт, мм, ГБ…"
+                     th:value="${mode == 'edit' ? specificationTypeForm.unit() : ''}">
+            </div>
+          </div>
+        </th:block>
+
         <div class="form-actions">
           <button class="button button--primary" type="submit">Сохранить</button>
           <a class="button button--ghost" th:href="@{/specification-types}">Отмена</a>
