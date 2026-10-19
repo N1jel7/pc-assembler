@@ -88,8 +88,10 @@ public class ComponentServiceImpl implements ComponentService {
 
 
         List<Specification> createdSpecifications = new ArrayList<>();
+        List<SpecificationCreateRequestDto> requestedSpecifications =
+                requestDto.getSpecifications() != null ? requestDto.getSpecifications() : List.of();
 
-        for (SpecificationCreateRequestDto spec : requestDto.getSpecifications()) {
+        for (SpecificationCreateRequestDto spec : requestedSpecifications) {
             createdSpecifications.add(Specification.builder()
                     .type(findSpecificationTypeById(spec.getSpecificationTypeId()))
                     .component(createdComponent)
@@ -141,12 +143,7 @@ public class ComponentServiceImpl implements ComponentService {
     public List<ComponentInfoResponseDto> getComponentsByComponentType(Long componentTypeId) {
         ComponentType findableType = findComponentTypeById(componentTypeId);
         List<Component> findableComponents = componentRepository.findComponentsByComponentType(findableType);
-
-        if (!findableComponents.isEmpty()) {
-            return componentMapper.mapToResponseDto(findableComponents);
-        }
-
-        return null;
+        return componentMapper.mapToResponseDto(findableComponents);
     }
 
     @Override
@@ -227,8 +224,11 @@ public ComponentTypeInfoResponseDto getComponentTypeById(Long componentTypeId) {
 @Transactional
 public ComponentTypeInfoResponseDto createComponentType(ComponentTypeCreateRequestDto requestDto) {
 
+    // min/max NOT NULL в БД — по умолчанию слот на один компонент
     ComponentType createdComponentType = ComponentType.builder()
             .name(requestDto.name())
+            .minAmount(requestDto.minAmount() != null ? requestDto.minAmount() : 1)
+            .maxAmount(requestDto.maxAmount() != null ? requestDto.maxAmount() : 1)
             .build();
 
     return componentMapper.mapToTypeResponseDto(componentTypeRepository.save(createdComponentType));

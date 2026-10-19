@@ -55,7 +55,7 @@ public class SpecificationServiceImpl implements SpecificationService {
                 .name(requestDto.getName())
                 .build();
 
-        if (!requestDto.getDescription().isEmpty()) {
+        if (requestDto.getDescription() != null && !requestDto.getDescription().isEmpty()) {
             specification.setDescription(requestDto.getDescription());
         }
 

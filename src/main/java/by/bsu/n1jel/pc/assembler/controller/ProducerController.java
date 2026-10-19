@@ -50,7 +50,7 @@ public class ProducerController {
         model.addAttribute("activePage", "producers");
         model.addAttribute("pageTitle", "Создать производителя");
         model.addAttribute("mode", "create");
-        model.addAttribute("producerForm", infoResponseDto);
+        model.addAttribute("producer", infoResponseDto);
         model.addAttribute("existingImages", List.of());
         model.addAttribute("maxImages", OverallUtil.getMaxImagesSize());
 
