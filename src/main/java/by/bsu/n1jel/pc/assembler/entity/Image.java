@@ -23,4 +23,7 @@ public class Image {
 
     @Column(name = "location")
     private String location;
+
+    @Column(name = "content_type")
+    private String contentType;
 }

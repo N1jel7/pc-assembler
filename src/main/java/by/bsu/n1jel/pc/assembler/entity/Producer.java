@@ -3,8 +3,6 @@ package by.bsu.n1jel.pc.assembler.entity;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.util.List;
-
 @Entity
 @Table(name = "producers")
 @Data
@@ -23,11 +21,11 @@ public class Producer {
     @Column(name = "country")
     private String country;
 
-    @OneToMany(cascade = CascadeType.ALL)
-    @JoinTable(
-            name = "producers_images",
-            joinColumns = @JoinColumn(name = "producer_id"),
-            inverseJoinColumns = @JoinColumn(name = "image_id")
-    )
-    private List<Image> images;
+    /**
+     * Фото производителя — оно же его аватарка. Если нет, используется SVG-заготовка.
+     */
+    @ToString.Exclude
+    @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @JoinColumn(name = "image_id")
+    private Image image;
 }

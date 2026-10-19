@@ -22,7 +22,18 @@ class DatabaseMigrationTest extends AbstractIntegrationTest {
     @Test
     void allChangesetsApplied() {
         Integer applied = jdbcTemplate.queryForObject("SELECT COUNT(*) FROM databasechangelog", Integer.class);
-        assertThat(applied).isEqualTo(5);
+        assertThat(applied).isEqualTo(6);
+    }
+
+    @Test
+    void brokenSeedImagesRemoved() {
+        Integer broken = jdbcTemplate.queryForObject(
+                "SELECT COUNT(*) FROM images WHERE bucket = 'pc-builder-images'", Integer.class);
+        Integer buildImagesTable = jdbcTemplate.queryForObject(
+                "SELECT COUNT(*) FROM information_schema.tables WHERE table_name = 'builds_images'", Integer.class);
+
+        assertThat(broken).isZero();
+        assertThat(buildImagesTable).isEqualTo(1);
     }
 
     @Test

@@ -4,7 +4,10 @@ import by.bsu.n1jel.pc.assembler.dto.request.image.DeleteImageRequestDto;
 import by.bsu.n1jel.pc.assembler.dto.request.image.LoadImageRequestDto;
 import by.bsu.n1jel.pc.assembler.dto.request.image.UploadImageRequestDto;
 import by.bsu.n1jel.pc.assembler.dto.response.ImageInfoResponseDto;
+import by.bsu.n1jel.pc.assembler.service.api.BuildService;
+import by.bsu.n1jel.pc.assembler.service.api.ComponentService;
 import by.bsu.n1jel.pc.assembler.service.api.ImageService;
+import by.bsu.n1jel.pc.assembler.service.api.ProducerService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -18,6 +21,9 @@ import org.springframework.web.bind.annotation.*;
 public class RestImageController {
 
     private final ImageService imageService;
+    private final ComponentService componentService;
+    private final BuildService buildService;
+    private final ProducerService producerService;
 
     @Operation(
             summary = "Get image by id",
@@ -39,11 +45,15 @@ public class RestImageController {
 
     @Operation(
             summary = "Upload",
-            description = "Uploading image by request dto"
+            description = "Uploading image and attaching it to object: component/build photo gallery or producer photo (replaces current)"
     )
     @PostMapping(value = "/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ImageInfoResponseDto upload(@ModelAttribute UploadImageRequestDto uploadImageRequestDto) {
-        return imageService.upload(uploadImageRequestDto);
+    public ImageInfoResponseDto upload(@ModelAttribute UploadImageRequestDto request) {
+        return switch (request.objectType()) {
+            case COMPONENT -> componentService.addImage(request.objectId(), request.file());
+            case BUILD -> buildService.addImage(request.objectId(), request.file());
+            case PRODUCER -> producerService.setImage(request.objectId(), request.file());
+        };
     }
 
 }

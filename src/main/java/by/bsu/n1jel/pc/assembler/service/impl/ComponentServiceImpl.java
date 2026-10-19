@@ -10,11 +10,17 @@ import by.bsu.n1jel.pc.assembler.dto.request.edit.SpecificationEditRequestDto;
 import by.bsu.n1jel.pc.assembler.dto.request.search.ComponentFilterRequestDto;
 import by.bsu.n1jel.pc.assembler.dto.response.ComponentInfoResponseDto;
 import by.bsu.n1jel.pc.assembler.dto.response.ComponentTypeInfoResponseDto;
+import by.bsu.n1jel.pc.assembler.dto.response.ImageInfoResponseDto;
 import by.bsu.n1jel.pc.assembler.entity.*;
+import by.bsu.n1jel.pc.assembler.entity.enums.ObjectType;
+import by.bsu.n1jel.pc.assembler.exception.ImageValidationException;
 import by.bsu.n1jel.pc.assembler.mapper.ComponentMapper;
 import by.bsu.n1jel.pc.assembler.repository.*;
 import by.bsu.n1jel.pc.assembler.service.api.ComponentService;
+import by.bsu.n1jel.pc.assembler.service.api.ImageService;
+import by.bsu.n1jel.pc.assembler.service.utils.ImageUrlUtil;
 import by.bsu.n1jel.pc.assembler.service.utils.OverallUtil;
+import org.springframework.web.multipart.MultipartFile;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -37,6 +43,7 @@ public class ComponentServiceImpl implements ComponentService {
     private final SpecificationRepository specsRepository;
     private final ComponentMapper componentMapper;
     private final SearchDao searchDao;
+    private final ImageService imageService;
 
     private Component findComponentById(Long componentId) {
         return componentRepository.findById(componentId)
@@ -92,6 +99,10 @@ public class ComponentServiceImpl implements ComponentService {
                 requestDto.getSpecifications() != null ? requestDto.getSpecifications() : List.of();
 
         for (SpecificationCreateRequestDto spec : requestedSpecifications) {
+            if (spec.getSpecificationTypeId() == null) {
+                // пустая строка характеристики из формы
+                continue;
+            }
             createdSpecifications.add(Specification.builder()
                     .type(findSpecificationTypeById(spec.getSpecificationTypeId()))
                     .component(createdComponent)
@@ -103,6 +114,35 @@ public class ComponentServiceImpl implements ComponentService {
         createdComponent.setSpecifications(createdSpecifications);
 
         return componentMapper.mapToResponseDto(componentRepository.save(createdComponent));
+    }
+
+    @Override
+    @Transactional
+    public ComponentInfoResponseDto createComponent(ComponentCreateRequestDto requestDto, List<MultipartFile> images) {
+        Component component = findComponentById(createComponent(requestDto).getId());
+        imageService.syncImages(component.getImages(), List.of(), images, ObjectType.COMPONENT, component.getId());
+        return componentMapper.mapToResponseDto(component);
+    }
+
+    @Override
+    @Transactional
+    public ComponentInfoResponseDto editComponentInfo(ComponentEditRequestDto requestDto, List<Long> keptImageIds, List<MultipartFile> images) {
+        editComponentInfo(requestDto);
+        Component component = findComponentById(requestDto.getId());
+        imageService.syncImages(component.getImages(), keptImageIds, images, ObjectType.COMPONENT, component.getId());
+        return componentMapper.mapToResponseDto(component);
+    }
+
+    @Override
+    @Transactional
+    public ImageInfoResponseDto addImage(Long componentId, MultipartFile file) {
+        Component component = findComponentById(componentId);
+        if (component.getImages().size() >= OverallUtil.getMaxImagesSize()) {
+            throw new ImageValidationException("У компонента может быть не больше %d фото".formatted(OverallUtil.getMaxImagesSize()));
+        }
+        Image image = imageService.store(file, ObjectType.COMPONENT, componentId);
+        component.getImages().add(image);
+        return ImageUrlUtil.toInfo(image);
     }
 
 
@@ -166,26 +206,31 @@ public class ComponentServiceImpl implements ComponentService {
         }
 
         if (requestDto.getSpecifications() != null) {
-            List<Specification> existingSpecs = componentFromDb.getSpecifications();
+            List<Specification> existingSpecs = componentFromDb.getSpecifications() != null
+                    ? componentFromDb.getSpecifications()
+                    : List.of();
 
             List<Specification> updatedSpecs = new ArrayList<>();
 
             for (SpecificationEditRequestDto dtoSpec : requestDto.getSpecifications()) {
-                boolean found = false;
-
-                for (Specification existingSpec : existingSpecs) {
-                    if (dtoSpec.getId().equals(existingSpec.getId())) {
-                        existingSpec.setValue(dtoSpec.getValue());
-                        updatedSpecs.add(existingSpec);
-                        found = true;
-                        break;
-                    }
+                if (dtoSpec.getId() == null && dtoSpec.getSpecificationTypeId() == null) {
+                    // пустая строка характеристики из формы
+                    continue;
                 }
 
-                if (!found) {
+                Specification existingSpec = findExistingSpecification(existingSpecs, updatedSpecs, dtoSpec);
+
+                if (existingSpec != null) {
+                    existingSpec.setValue(dtoSpec.getValue());
+                    updatedSpecs.add(existingSpec);
+                } else {
+                    // REST исторически передаёт id типа в поле id, форма — в specificationTypeId
+                    Long typeId = dtoSpec.getSpecificationTypeId() != null
+                            ? dtoSpec.getSpecificationTypeId()
+                            : dtoSpec.getId();
                     Specification newSpec = Specification.builder()
                             .component(componentFromDb)
-                            .type(findSpecificationTypeById(dtoSpec.getId()))
+                            .type(findSpecificationTypeById(typeId))
                             .value(dtoSpec.getValue())
                             .build();
                     updatedSpecs.add(newSpec);
@@ -198,12 +243,34 @@ public class ComponentServiceImpl implements ComponentService {
         return componentFromDb;
     }
 
+    /**
+     * Существующая характеристика: по id (REST) или по типу (форма — одна характеристика каждого типа).
+     */
+    private Specification findExistingSpecification(List<Specification> existingSpecs,
+                                                    List<Specification> alreadyUpdated,
+                                                    SpecificationEditRequestDto dtoSpec) {
+        for (Specification spec : existingSpecs) {
+            // сравнение по ссылке: equals из @Data рекурсивно ходит по связям сущностей
+            if (alreadyUpdated.stream().anyMatch(updated -> updated == spec)) {
+                continue;
+            }
+            if (dtoSpec.getId() != null && dtoSpec.getId().equals(spec.getId())) {
+                return spec;
+            }
+            if (dtoSpec.getSpecificationTypeId() != null && dtoSpec.getSpecificationTypeId().equals(spec.getType().getId())) {
+                return spec;
+            }
+        }
+        return null;
+    }
+
 
 @Override
 @Transactional
 public ComponentInfoResponseDto deleteComponentById(Long componentId) {
     Component componentFromDb = findComponentById(componentId);
     ComponentInfoResponseDto responseDto = componentMapper.mapToResponseDto(componentFromDb);
+    imageService.removeFromStorage(componentFromDb.getImages());
     componentRepository.delete(componentFromDb);
     return responseDto;
 }

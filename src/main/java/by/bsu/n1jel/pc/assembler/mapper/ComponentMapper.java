@@ -6,7 +6,9 @@ import by.bsu.n1jel.pc.assembler.dto.response.ComponentTypeInfoResponseDto;
 import by.bsu.n1jel.pc.assembler.dto.response.ComponentInfoResponseDto;
 import by.bsu.n1jel.pc.assembler.dto.response.SpecificationInfoResponseDto;
 import by.bsu.n1jel.pc.assembler.entity.*;
+import by.bsu.n1jel.pc.assembler.dto.response.ImageInfoResponseDto;
 import by.bsu.n1jel.pc.assembler.service.utils.DefaultImageUtil;
+import by.bsu.n1jel.pc.assembler.service.utils.ImageUrlUtil;
 import org.mapstruct.*;
 
 import java.util.ArrayList;
@@ -23,6 +25,7 @@ public interface ComponentMapper {
     @Mapping(target = "componentTypeName", source = "componentType", qualifiedByName = "getComponentTypeName")
     @Mapping(target = "specifications", source = "specifications", qualifiedByName = "getSpecificationInfoResponseDtoList")
     @Mapping(target = "avatar", source = "component", qualifiedByName = "getDefaultAvatar")
+    @Mapping(target = "images", source = "images", qualifiedByName = "getImages")
     ComponentInfoResponseDto mapToResponseDto(Component component);
 
     List<ComponentInfoResponseDto> mapToResponseDto(List<Component> components);
@@ -34,6 +37,7 @@ public interface ComponentMapper {
     @Mapping(target = "producer", ignore = true)
     @Mapping(target = "componentType", ignore = true)
     @Mapping(target = "specifications", ignore = true)
+    @Mapping(target = "images", ignore = true)
     Component updateComponent(@MappingTarget Component component, ComponentEditRequestDto requestDto);
 
     ComponentType updateComponentType(@MappingTarget ComponentType componentType, ComponentTypeEditRequestDto requestDto);
@@ -75,6 +79,11 @@ public interface ComponentMapper {
     @Named("getComponentTypeName")
     default String getComponentTypeName(ComponentType componentType) {
         return componentType.getName();
+    }
+
+    @Named("getImages")
+    default List<ImageInfoResponseDto> getImages(List<Image> images) {
+        return ImageUrlUtil.toInfo(images);
     }
 
     @Named("getDefaultAvatar")

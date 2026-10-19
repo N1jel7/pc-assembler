@@ -14,4 +14,5 @@ public class BuildInfoResponseDto{
     private Integer filledSlots;
     private List<BuildPartitionInfoResponseDto> partitions;
     private String avatar;
+    private List<ImageInfoResponseDto> images;
 }

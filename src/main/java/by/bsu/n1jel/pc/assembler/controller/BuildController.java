@@ -15,6 +15,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -69,7 +70,7 @@ public class BuildController {
         model.addAttribute("buildItems",
                 build.getPartitions() == null ? List.of() : build.getPartitions());
 
-        model.addAttribute("buildPhotos", List.of());
+        model.addAttribute("buildPhotos", build.getImages());
         model.addAttribute("totalPrice", build.getPrice());
         model.addAttribute("maxComponentTypeAmount", componentService.getAllComponentTypesSize());
 
@@ -108,13 +109,16 @@ public class BuildController {
         model.addAttribute("defaultAvatar", buildPreview.getAvatar());
         model.addAttribute("totalPrice", "0 BYN");
         model.addAttribute("filledSlots", 0);
+        model.addAttribute("existingImages", List.of());
+        model.addAttribute("maxImages", OverallUtil.getMaxImagesSize());
 
         return "builds/form";
     }
 
     @PostMapping("/create")
-    public String create(@ModelAttribute BuildCreateRequestDto requestDto) {
-        BuildInfoResponseDto responseDto = buildService.createBuild(requestDto);
+    public String create(@ModelAttribute BuildCreateRequestDto requestDto,
+                         @RequestParam(name = "images", required = false) List<MultipartFile> images) {
+        BuildInfoResponseDto responseDto = buildService.createBuild(requestDto, images);
 
         return "redirect:/builds/" + responseDto.getBuildId() + "/edit";
     }
@@ -158,16 +162,20 @@ public class BuildController {
                         : DefaultImageUtil.buildAvatar(build.getName()));
         model.addAttribute("totalPrice", build.getPrice());
         model.addAttribute("filledSlots", build.getFilledSlots());
+        model.addAttribute("existingImages", build.getImages());
+        model.addAttribute("maxImages", OverallUtil.getMaxImagesSize());
 
         return "builds/form";
     }
 
     @PostMapping("/{buildId}/edit")
     public String edit(@PathVariable Long buildId,
-                       @ModelAttribute BuildEditRequestDto buildEditRequestDto) {
+                       @ModelAttribute BuildEditRequestDto buildEditRequestDto,
+                       @RequestParam(name = "keptImageIds", required = false) List<Long> keptImageIds,
+                       @RequestParam(name = "images", required = false) List<MultipartFile> images) {
 
         buildEditRequestDto.setBuildId(buildId);
-        buildService.editBuildInfo(buildEditRequestDto);
+        buildService.editBuildInfo(buildEditRequestDto, keptImageIds, images);
 
         return "redirect:/builds/" + buildId;
     }

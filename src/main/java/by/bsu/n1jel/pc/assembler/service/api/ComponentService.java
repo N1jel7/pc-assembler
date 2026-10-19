@@ -6,6 +6,8 @@ import by.bsu.n1jel.pc.assembler.dto.request.edit.ComponentEditRequestDto;
 import by.bsu.n1jel.pc.assembler.dto.request.edit.ComponentTypeEditRequestDto;
 import by.bsu.n1jel.pc.assembler.dto.response.ComponentInfoResponseDto;
 import by.bsu.n1jel.pc.assembler.dto.response.ComponentTypeInfoResponseDto;
+import by.bsu.n1jel.pc.assembler.dto.response.ImageInfoResponseDto;
+import org.springframework.web.multipart.MultipartFile;
 import by.bsu.n1jel.pc.assembler.dto.request.search.ComponentFilterRequestDto;
 import org.jspecify.annotations.Nullable;
 import org.springframework.data.domain.Page;
@@ -37,6 +39,14 @@ public interface ComponentService {
     ComponentInfoResponseDto editComponentInfo(ComponentEditRequestDto requestDto);
 
     ComponentInfoResponseDto deleteComponentById(Long componentId);
+
+    // IMAGES
+
+    ComponentInfoResponseDto createComponent(ComponentCreateRequestDto requestDto, List<MultipartFile> images);
+
+    ComponentInfoResponseDto editComponentInfo(ComponentEditRequestDto requestDto, List<Long> keptImageIds, List<MultipartFile> images);
+
+    ImageInfoResponseDto addImage(Long componentId, MultipartFile file);
 
     // COMPONENT TYPES
 

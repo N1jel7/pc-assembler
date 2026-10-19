@@ -19,4 +19,14 @@ public class ComponentEditRequestDto {
     BigDecimal price;
     Integer stockQuantity;
     List<SpecificationEditRequestDto> specifications;
+
+    // Веб-форма строится по ComponentInfoResponseDto и шлёт producerId / componentTypeId
+
+    public void setProducerId(Long producerId) {
+        this.producer = producerId;
+    }
+
+    public void setComponentTypeId(Long componentTypeId) {
+        this.componentType = componentTypeId;
+    }
 }

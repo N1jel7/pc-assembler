@@ -38,6 +38,15 @@
       <a class="button button--primary button--sm" th:href="@{/builds/create}">+ Сборка</a>
     </div>
   </div>
+
+  <!-- ошибка загрузки файлов (UploadExceptionHandler) -->
+  <div class="container" th:if="${uploadError != null}">
+    <div class="alert alert--error" role="alert">
+      <span th:text="${uploadError}">Файл слишком большой</span>
+      <button class="alert__close" type="button" aria-label="Закрыть"
+              onclick="this.closest('.container').remove()">✕</button>
+    </div>
+  </div>
 </header>
 </body>
 </html>

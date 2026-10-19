@@ -807,6 +807,32 @@ site-footer {
   margin-bottom: 16px;
 }
 
+.alert--error {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 12px 0;
+  background: rgba(239, 68, 68, 0.1);
+  border-color: rgba(239, 68, 68, 0.35);
+  color: #fecaca;
+}
+
+.alert__close {
+  flex: none;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  font-size: 1rem;
+  line-height: 1;
+  padding: 2px;
+}
+
+.file-control__status.is-error {
+  color: var(--danger);
+}
+
 .kv-list {
   display: grid;
   gap: 10px;
@@ -1069,6 +1095,209 @@ site-footer {
   object-fit: contain;
   display: block;
   background: #0b1118;
+}
+
+.image-modal__body {
+  position: relative;
+}
+
+.image-modal__counter {
+  color: var(--muted);
+  font-size: 0.9rem;
+  margin-left: auto;
+}
+
+.image-modal .carousel__nav {
+  opacity: 1;
+}
+
+/* ===== Photo carousel (detail pages) ===== */
+.carousel {
+  display: grid;
+  gap: 12px;
+}
+
+.carousel__stage {
+  position: relative;
+  border-radius: 22px;
+  border: 1px solid var(--line);
+  background: #0b1118;
+  overflow: hidden;
+}
+
+.carousel__track {
+  display: flex;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scroll-behavior: smooth;
+  scrollbar-width: none;
+  overscroll-behavior-x: contain;
+}
+
+.carousel__track::-webkit-scrollbar {
+  display: none;
+}
+
+.carousel__track:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+}
+
+.carousel__slide {
+  flex: 0 0 100%;
+  margin: 0;
+  scroll-snap-align: center;
+  aspect-ratio: 16 / 9;
+  display: grid;
+  place-items: center;
+  cursor: zoom-in;
+}
+
+.carousel__slide img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+  user-select: none;
+}
+
+.carousel__nav,
+.carousel__zoom {
+  position: absolute;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(9, 13, 19, 0.72);
+  backdrop-filter: blur(8px);
+  color: var(--text);
+  cursor: pointer;
+  transition: opacity 0.2s ease, background 0.2s ease;
+}
+
+.carousel__nav {
+  top: 50%;
+  translate: 0 -50%;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  font-size: 1.6rem;
+  line-height: 1;
+  opacity: 0;
+}
+
+.carousel__nav--prev {
+  left: 14px;
+}
+
+.carousel__nav--next {
+  right: 14px;
+}
+
+.carousel__stage:hover .carousel__nav,
+.carousel__stage:focus-within .carousel__nav {
+  opacity: 1;
+}
+
+.carousel__nav:hover,
+.carousel__zoom:hover {
+  background: rgba(110, 231, 255, 0.18);
+}
+
+.carousel__nav[hidden] {
+  display: none;
+}
+
+.carousel__nav:disabled {
+  opacity: 0 !important;
+  pointer-events: none;
+}
+
+.carousel__counter {
+  position: absolute;
+  left: 14px;
+  bottom: 14px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: rgba(9, 13, 19, 0.72);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  font-size: 0.85rem;
+  color: var(--text);
+  pointer-events: none;
+}
+
+.carousel__zoom {
+  right: 14px;
+  bottom: 14px;
+  width: 38px;
+  height: 38px;
+  border-radius: 12px;
+  font-size: 1.1rem;
+}
+
+.carousel__thumbs {
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+  scrollbar-width: thin;
+}
+
+.carousel__thumb {
+  flex: 0 0 auto;
+  width: 96px;
+  aspect-ratio: 4 / 3;
+  padding: 0;
+  border-radius: 12px;
+  border: 2px solid transparent;
+  background: #0b1118;
+  overflow: hidden;
+  cursor: pointer;
+  opacity: 0.55;
+  transition: opacity 0.2s ease, border-color 0.2s ease;
+}
+
+.carousel__thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.carousel__thumb:hover {
+  opacity: 0.85;
+}
+
+.carousel__thumb.is-active {
+  opacity: 1;
+  border-color: var(--accent);
+}
+
+/* на тач-экранах наведения нет — стрелки видны всегда */
+@media (hover: none) {
+  .carousel__nav {
+    opacity: 1;
+  }
+}
+
+@media (max-width: 560px) {
+  .carousel__slide {
+    aspect-ratio: 4 / 3;
+  }
+
+  .carousel__nav {
+    width: 38px;
+    height: 38px;
+  }
+
+  .carousel__thumb {
+    width: 72px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .carousel__track {
+    scroll-behavior: auto;
+  }
 }
 
 /* ===== Custom file input button ===== */

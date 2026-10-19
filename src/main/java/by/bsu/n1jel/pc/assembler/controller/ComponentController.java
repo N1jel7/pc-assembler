@@ -16,6 +16,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -100,7 +101,7 @@ public class ComponentController {
                         : DefaultImageUtil.buildAvatar(componentDto.getName()));
         model.addAttribute("producer", producerDto);
         model.addAttribute("specifications", componentDto.getSpecifications());
-        model.addAttribute("componentPhotos", List.of());
+        model.addAttribute("componentPhotos", componentDto.getImages());
 
         return "components/detail";
     }
@@ -124,8 +125,9 @@ public class ComponentController {
     }
 
     @PostMapping("/create")
-    public String create(@ModelAttribute ComponentCreateRequestDto requestDto) {
-        ComponentInfoResponseDto componentInfoResponseDto = componentService.createComponent(requestDto);
+    public String create(@ModelAttribute ComponentCreateRequestDto requestDto,
+                         @RequestParam(name = "images", required = false) List<MultipartFile> images) {
+        ComponentInfoResponseDto componentInfoResponseDto = componentService.createComponent(requestDto, images);
         return "redirect:/components/" + componentInfoResponseDto.getId();
     }
 
@@ -145,7 +147,7 @@ public class ComponentController {
         model.addAttribute("specificationTypes", specificationService.getAllSpecificationTypes());
 
 
-        model.addAttribute("existingImages", List.of());
+        model.addAttribute("existingImages", responseDto.getImages());
         model.addAttribute("maxImages", OverallUtil.getMaxImagesSize());
         model.addAttribute("defaultAvatar",
                 DefaultImageUtil.componentAvatar(responseDto.getComponentTypeName(), responseDto.getName()));
@@ -154,9 +156,12 @@ public class ComponentController {
     }
 
     @PostMapping("/{id}/edit")
-    public String edit(@PathVariable Long id, @ModelAttribute ComponentEditRequestDto requestDto) {
+    public String edit(@PathVariable Long id,
+                       @ModelAttribute ComponentEditRequestDto requestDto,
+                       @RequestParam(name = "keptImageIds", required = false) List<Long> keptImageIds,
+                       @RequestParam(name = "images", required = false) List<MultipartFile> images) {
         requestDto.setId(id);
-        componentService.editComponentInfo(requestDto);
+        componentService.editComponentInfo(requestDto, keptImageIds, images);
         return "redirect:/components/" + id;
     }
 

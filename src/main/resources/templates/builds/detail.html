@@ -84,17 +84,9 @@
       </div>
     </div>
 
-    <div class="upload-gallery" th:if="${not #lists.isEmpty(buildPhotos)}">
-      <article class="upload-item" th:each="photo, stat : ${buildPhotos}" th:attr="data-image-src=${photo.url}, data-image-title='Фото ' + ${stat.count}">
-        <img class="upload-item__img" th:src="${photo.url}" th:alt="'Фото ' + ${stat.count}">
-        <div class="upload-item__bar">
-          <div class="upload-item__name" th:text="'Фото ' + ${stat.count}">Фото 1</div>
-          <div class="upload-item__actions">
-            <button class="upload-item__btn" type="button" data-image-view>👁</button>
-          </div>
-        </div>
-      </article>
-    </div>
+    <th:block th:if="${not #lists.isEmpty(buildPhotos)}">
+      <div th:replace="~{fragments/images :: carousel(${buildPhotos}, ${build.name})}"></div>
+    </th:block>
 
     <div class="empty-state" th:if="${#lists.isEmpty(buildPhotos)}">
       Дополнительные фото отсутствуют.

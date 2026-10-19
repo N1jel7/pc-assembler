@@ -23,7 +23,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * Тесты не откатывают транзакции — каждый создаёт свои данные с уникальными именами,
  * поэтому проверяется реальное поведение, включая ленивую загрузку вне транзакций.
  */
-@SpringBootTest
+// RANDOM_PORT — чтобы тесты, которым нужен настоящий Tomcat (лимиты multipart), шли в том же контексте
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @AutoConfigureMockMvc
 @Import(TestcontainersConfiguration.class)
 public abstract class AbstractIntegrationTest {

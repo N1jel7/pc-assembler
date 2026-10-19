@@ -5,6 +5,7 @@ import by.bsu.n1jel.pc.assembler.dto.request.edit.ProducerEditInfoRequestDto;
 import by.bsu.n1jel.pc.assembler.dto.request.search.ProducerFilterRequestDto;
 import by.bsu.n1jel.pc.assembler.dto.response.ProducerInfoResponseDto;
 import by.bsu.n1jel.pc.assembler.service.api.ProducerService;
+import by.bsu.n1jel.pc.assembler.service.utils.UploadUtil;
 import by.bsu.n1jel.pc.assembler.service.utils.DefaultImageUtil;
 import by.bsu.n1jel.pc.assembler.service.utils.OverallUtil;
 import lombok.RequiredArgsConstructor;
@@ -12,6 +13,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -19,6 +21,9 @@ import java.util.List;
 @RequiredArgsConstructor
 @Controller
 public class ProducerController {
+
+    // у производителя одно фото — оно же аватарка
+    private static final int PRODUCER_MAX_IMAGES = 1;
 
     private final ProducerService producerService;
 
@@ -52,15 +57,16 @@ public class ProducerController {
         model.addAttribute("mode", "create");
         model.addAttribute("producer", infoResponseDto);
         model.addAttribute("existingImages", List.of());
-        model.addAttribute("maxImages", OverallUtil.getMaxImagesSize());
+        model.addAttribute("maxImages", PRODUCER_MAX_IMAGES);
 
         return "producers/form";
     }
 
     @PostMapping("/create")
-    public String create(@ModelAttribute ProducerCreateRequestDto requestDto) {
+    public String create(@ModelAttribute ProducerCreateRequestDto requestDto,
+                         @RequestParam(name = "images", required = false) List<MultipartFile> images) {
 
-        producerService.createProducer(requestDto);
+        producerService.createProducer(requestDto, firstFile(images));
         return "redirect:/producers";
     }
 
@@ -77,20 +83,28 @@ public class ProducerController {
                 responseDto.getAvatar() != null && !responseDto.getAvatar().isBlank()
                         ? responseDto.getAvatar()
                         : DefaultImageUtil.producerAvatar(responseDto.getName(), responseDto.getCountry()));
-        model.addAttribute("existingImages", List.of());
-        model.addAttribute("maxImages", OverallUtil.getMaxImagesSize());
+        model.addAttribute("existingImages",
+                responseDto.getImage() != null ? List.of(responseDto.getImage()) : List.of());
+        model.addAttribute("maxImages", PRODUCER_MAX_IMAGES);
 
         return "producers/form";
     }
 
     @PostMapping("/{id}/edit")
     public String edit(@PathVariable Long id,
-                       @ModelAttribute ProducerEditInfoRequestDto requestDto
-                       /*@RequestParam(query = "images", required = false) MultipartFile[] images,
-                       @RequestParam(query = "keptImageIds", required = false) List<Long> keptImageIds*/) {
+                       @ModelAttribute ProducerEditInfoRequestDto requestDto,
+                       @RequestParam(name = "keptImageIds", required = false) List<Long> keptImageIds,
+                       @RequestParam(name = "images", required = false) List<MultipartFile> images) {
 
-        producerService.editProducerInfo(requestDto);
+        producerService.editProducerInfo(
+                new ProducerEditInfoRequestDto(id, requestDto.name(), requestDto.country()),
+                keptImageIds,
+                firstFile(images));
         return "redirect:/producers";
+    }
+
+    private static MultipartFile firstFile(List<MultipartFile> files) {
+        return UploadUtil.firstNonEmpty(files);
     }
 
     @PostMapping("/{id}/delete")

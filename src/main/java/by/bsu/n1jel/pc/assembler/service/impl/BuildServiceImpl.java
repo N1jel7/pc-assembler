@@ -10,13 +10,20 @@ import by.bsu.n1jel.pc.assembler.dto.response.BuildInfoResponseDto;
 import by.bsu.n1jel.pc.assembler.dto.response.BuildPartitionInfoResponseDto;
 import by.bsu.n1jel.pc.assembler.entity.Build;
 import by.bsu.n1jel.pc.assembler.entity.BuildPartition;
+import by.bsu.n1jel.pc.assembler.dto.response.ImageInfoResponseDto;
 import by.bsu.n1jel.pc.assembler.entity.Component;
+import by.bsu.n1jel.pc.assembler.entity.Image;
+import by.bsu.n1jel.pc.assembler.entity.enums.ObjectType;
+import by.bsu.n1jel.pc.assembler.exception.ImageValidationException;
 import by.bsu.n1jel.pc.assembler.mapper.BuildMapper;
 import by.bsu.n1jel.pc.assembler.repository.BuildPartitionRepository;
 import by.bsu.n1jel.pc.assembler.repository.BuildRepository;
 import by.bsu.n1jel.pc.assembler.repository.ComponentRepository;
 import by.bsu.n1jel.pc.assembler.service.api.BuildService;
+import by.bsu.n1jel.pc.assembler.service.api.ImageService;
+import by.bsu.n1jel.pc.assembler.service.utils.ImageUrlUtil;
 import by.bsu.n1jel.pc.assembler.service.utils.OverallUtil;
+import org.springframework.web.multipart.MultipartFile;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -37,6 +44,7 @@ public class BuildServiceImpl implements BuildService {
     private final BuildPartitionRepository partitionRepository;
     private final ComponentRepository componentRepository;
     private final SearchDao searchDao;
+    private final ImageService imageService;
 
     private BuildPartition findBuildPartitionById(Long buildPartitionId) {
         return partitionRepository.findById(buildPartitionId)
@@ -115,8 +123,38 @@ public class BuildServiceImpl implements BuildService {
     public BuildInfoResponseDto deleteBuildById(Long buildId) {
         Build buildFromDb = findBuildById(buildId);
         BuildInfoResponseDto responseDto = buildMapper.mapToResponseDto(buildFromDb);
+        imageService.removeFromStorage(buildFromDb.getImages());
         buildRepository.delete(buildFromDb);
         return responseDto;
+    }
+
+    @Override
+    @Transactional
+    public BuildInfoResponseDto createBuild(BuildCreateRequestDto requestDto, List<MultipartFile> images) {
+        Build build = findBuildById(createBuild(requestDto).getBuildId());
+        imageService.syncImages(build.getImages(), List.of(), images, ObjectType.BUILD, build.getId());
+        return buildMapper.mapToResponseDto(build);
+    }
+
+    @Override
+    @Transactional
+    public BuildInfoResponseDto editBuildInfo(BuildEditRequestDto requestDto, List<Long> keptImageIds, List<MultipartFile> images) {
+        editBuildInfo(requestDto);
+        Build build = findBuildById(requestDto.getBuildId());
+        imageService.syncImages(build.getImages(), keptImageIds, images, ObjectType.BUILD, build.getId());
+        return buildMapper.mapToResponseDto(build);
+    }
+
+    @Override
+    @Transactional
+    public ImageInfoResponseDto addImage(Long buildId, MultipartFile file) {
+        Build build = findBuildById(buildId);
+        if (build.getImages().size() >= OverallUtil.getMaxImagesSize()) {
+            throw new ImageValidationException("У сборки может быть не больше %d фото".formatted(OverallUtil.getMaxImagesSize()));
+        }
+        Image image = imageService.store(file, ObjectType.BUILD, buildId);
+        build.getImages().add(image);
+        return ImageUrlUtil.toInfo(image);
     }
 
     @Override

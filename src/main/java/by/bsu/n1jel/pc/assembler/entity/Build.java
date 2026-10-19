@@ -6,6 +6,7 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.springframework.format.annotation.DateTimeFormat;
 
 import java.sql.Timestamp;
+import java.util.ArrayList;
 import java.util.List;
 
 @Builder
@@ -29,4 +30,14 @@ public class Build {
     @Column(name = "creation_date", nullable = false)
     @CreationTimestamp
     private Timestamp creationDate;
+
+    @ToString.Exclude
+    @Builder.Default
+    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
+    @JoinTable(
+            name = "builds_images",
+            joinColumns = @JoinColumn(name = "build_id"),
+            inverseJoinColumns = @JoinColumn(name = "image_id")
+    )
+    private List<Image> images = new ArrayList<>();
 }

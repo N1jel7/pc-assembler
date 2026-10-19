@@ -8,7 +8,10 @@ import by.bsu.n1jel.pc.assembler.entity.Build;
 import by.bsu.n1jel.pc.assembler.entity.BuildPartition;
 import by.bsu.n1jel.pc.assembler.entity.Component;
 import by.bsu.n1jel.pc.assembler.mapper.decorator.BuildMapperDecorator;
+import by.bsu.n1jel.pc.assembler.dto.response.ImageInfoResponseDto;
+import by.bsu.n1jel.pc.assembler.entity.Image;
 import by.bsu.n1jel.pc.assembler.service.utils.DefaultImageUtil;
+import by.bsu.n1jel.pc.assembler.service.utils.ImageUrlUtil;
 import org.mapstruct.*;
 
 import java.util.List;
@@ -20,6 +23,7 @@ public interface BuildMapper {
     @Mapping(target = "partitions", source = "buildPartitions")
     @Mapping(target = "buildId", source = "id")
     @Mapping(target = "avatar", source = "build", qualifiedByName = "getDefaultAvatar")
+    @Mapping(target = "images", source = "images", qualifiedByName = "getImages")
     BuildInfoResponseDto mapToResponseDto(Build build);
 
     List<BuildInfoResponseDto> mapToResponseDto(List<Build> builds);
@@ -43,6 +47,7 @@ public interface BuildMapper {
     BuildPartition updatePartition(@MappingTarget BuildPartition buildPartition, BuildPartitionEditRequestDto requestDto);
 
     @Mapping(target = "id", ignore = true)
+    @Mapping(target = "images", ignore = true)
     Build updateBuild(@MappingTarget Build build, BuildEditRequestDto requestDto);
 
     @Named("getComponentTypeName")
@@ -69,6 +74,11 @@ public interface BuildMapper {
     @Named("getProducerName")
     default String getProducerName(Component component) {
         return component.getProducer().getName();
+    }
+
+    @Named("getImages")
+    default List<ImageInfoResponseDto> getImages(List<Image> images) {
+        return ImageUrlUtil.toInfo(images);
     }
 
     @Named("getDefaultAvatar")

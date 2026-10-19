@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -46,11 +47,13 @@ public class Component {
     )
     private List<Specification> specifications;
 
-    @OneToMany(cascade = CascadeType.ALL)
+    @ToString.Exclude
+    @Builder.Default
+    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
     @JoinTable(
             name = "components_images",
             joinColumns = @JoinColumn(name = "component_id"),
             inverseJoinColumns = @JoinColumn(name = "image_id")
     )
-    private List<Image> images;
+    private List<Image> images = new ArrayList<>();
 }

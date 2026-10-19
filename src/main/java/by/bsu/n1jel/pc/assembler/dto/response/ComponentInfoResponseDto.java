@@ -17,4 +17,5 @@ public class ComponentInfoResponseDto {
         private Integer stockQuantity;
         private List<SpecificationInfoResponseDto> specifications;
         private String avatar;
+        private List<ImageInfoResponseDto> images;
 }

@@ -113,7 +113,7 @@
 
           <template id="component-spec-template">
             <div class="editor-row js-spec-row">
-              <select class="select" name="specifications[__INDEX__].id">
+              <select class="select" name="specifications[__INDEX__].specificationTypeId">
                 <option value="">Выбери характеристику</option>
                 <option th:each="stype : ${specificationTypes}"
                         th:value="${stype.id()}"
@@ -131,6 +131,10 @@
             <button class="button button--ghost button--sm" type="button" id="component-spec-add">+ Добавить характеристику</button>
           </div>
         </div>
+
+        <div th:replace="~{fragments/images :: uploader('Фотографии компонента',
+             'До ' + ${maxImages} + ' фото, показываются на странице компонента. Аватарка остаётся стандартной.',
+             ${existingImages}, ${maxImages})}"></div>
 
         <div class="form-actions">
           <button class="button button--primary" type="submit">Сохранить</button>

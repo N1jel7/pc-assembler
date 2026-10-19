@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<body>
+
+<!--
+  Блок фото внутри формы с enctype="multipart/form-data".
+  Отправляет: images — новые файлы, keptImageIds — id загруженных фото, которые нужно оставить.
+  existingImages — список ImageInfoResponseDto, maxImages — лимит фото.
+-->
+<div th:fragment="uploader(title, hint, existingImages, maxImages)"
+     class="panel" style="padding:16px;"
+     data-upload-widget
+     th:attr="data-max=${maxImages},
+              data-max-file-bytes=${uploadLimits.maxFileBytes()},
+              data-max-file-mb=${uploadLimits.maxFileMb()},
+              data-max-request-bytes=${uploadLimits.maxRequestBytes()},
+              data-max-request-mb=${uploadLimits.maxRequestMb()}">
+  <div class="upload-section">
+    <div class="upload-section__head">
+      <div>
+        <h3 class="panel__title" style="font-size:1.05rem; margin:0;" th:text="${title}">Фотографии</h3>
+        <div class="upload-hint" th:text="${hint}">Подсказка</div>
+        <div class="upload-hint"
+             th:text="'JPEG, PNG, WebP или GIF, до ' + ${uploadLimits.maxFileMb()} + ' МБ каждое.'">
+          JPEG, PNG, WebP или GIF, до 5 МБ каждое.
+        </div>
+      </div>
+      <div class="badge badge--accent js-upload-count"
+           th:text="${#lists.size(existingImages)} + '/' + ${maxImages}">0/5</div>
+    </div>
+
+    <div class="upload-gallery" th:if="${not #lists.isEmpty(existingImages)}">
+      <article class="upload-item" th:each="image, stat : ${existingImages}"
+               th:attr="data-image-src=${image.url()}, data-image-title='Фото ' + ${stat.count}">
+        <img class="upload-item__img" th:src="${image.url()}" th:alt="'Фото ' + ${stat.count}">
+        <div class="upload-item__bar">
+          <label class="upload-item__name">
+            <input type="checkbox" name="keptImageIds" th:value="${image.id()}" checked>
+            Оставить
+          </label>
+          <div class="upload-item__actions">
+            <button class="upload-item__btn" type="button" data-image-view>👁</button>
+          </div>
+        </div>
+      </article>
+    </div>
+
+    <input class="js-file-input input" type="file" name="images"
+           accept="image/jpeg,image/png,image/webp,image/gif"
+           th:multiple="${maxImages > 1}">
+    <div class="js-file-preview upload-gallery"></div>
+  </div>
+</div>
+
+<!--
+  Лента фото для детальных страниц: листается стрелками, свайпом, клавишами ← → и миниатюрами.
+  images — список ImageInfoResponseDto, title — подпись для просмотрщика и скринридеров.
+-->
+<div th:fragment="carousel(images, title)"
+     class="carousel" data-carousel
+     th:attr="data-title=${title}"
+     th:with="total=${#lists.size(images)}">
+  <div class="carousel__stage">
+    <div class="carousel__track" tabindex="0"
+         aria-roledescription="карусель"
+         th:attr="aria-label=${title}">
+      <figure class="carousel__slide" th:each="image, stat : ${images}"
+              th:attr="data-src=${image.url()}, aria-label=${stat.count} + ' из ' + ${total}">
+        <img th:src="${image.url()}"
+             th:alt="${title} + ', фото ' + ${stat.count}"
+             th:attr="loading=${stat.first ? 'eager' : 'lazy'}"
+             draggable="false">
+      </figure>
+    </div>
+
+    <th:block th:if="${total > 1}">
+      <button class="carousel__nav carousel__nav--prev" type="button" data-carousel-prev aria-label="Предыдущее фото">‹</button>
+      <button class="carousel__nav carousel__nav--next" type="button" data-carousel-next aria-label="Следующее фото">›</button>
+    </th:block>
+
+    <div class="carousel__counter" aria-live="polite">
+      <span data-carousel-current>1</span> / <span th:text="${total}">1</span>
+    </div>
+    <button class="carousel__zoom" type="button" data-carousel-zoom aria-label="Открыть на весь экран">⤢</button>
+  </div>
+
+  <div class="carousel__thumbs" th:if="${total > 1}">
+    <button class="carousel__thumb" type="button" th:each="image, stat : ${images}"
+            th:classappend="${stat.first} ? ' is-active'"
+            th:attr="data-carousel-to=${stat.index}, aria-label='Показать фото ' + ${stat.count}">
+      <img th:src="${image.url()}" alt="" loading="lazy" draggable="false">
+    </button>
+  </div>
+</div>
+
+</body>
+</html>

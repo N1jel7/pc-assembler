@@ -1,38 +1,174 @@
 (function () {
-  function openImageModal(src, title = 'Фото') {
-    let modal = document.getElementById('image-modal');
+  // Просмотрщик на весь экран. Для ленты фото умеет листать: стрелки, клавиши ← →, Esc закрывает.
+  const viewer = {
+    modal: null,
+    items: [],
+    index: 0,
+    title: 'Фото',
+    onChange: null,
+    returnFocus: null
+  };
 
-    if (!modal) {
-      modal = document.createElement('div');
-      modal.id = 'image-modal';
-      modal.className = 'image-modal';
-      modal.innerHTML = `
-        <div class="image-modal__content">
-          <div class="image-modal__top">
-            <div class="image-modal__title"></div>
-            <button class="image-modal__close" type="button">✕</button>
-          </div>
-          <div class="image-modal__body">
-            <img alt="">
-          </div>
+  function ensureModal() {
+    if (viewer.modal) return viewer.modal;
+
+    const modal = document.createElement('div');
+    modal.id = 'image-modal';
+    modal.className = 'image-modal';
+    modal.setAttribute('role', 'dialog');
+    modal.setAttribute('aria-modal', 'true');
+    modal.innerHTML = `
+      <div class="image-modal__content">
+        <div class="image-modal__top">
+          <div class="image-modal__title"></div>
+          <div class="image-modal__counter" aria-live="polite"></div>
+          <button class="image-modal__close" type="button" aria-label="Закрыть">✕</button>
         </div>
-      `;
-      document.body.appendChild(modal);
+        <div class="image-modal__body">
+          <img alt="">
+          <button class="carousel__nav carousel__nav--prev" type="button" data-viewer-prev aria-label="Предыдущее фото">‹</button>
+          <button class="carousel__nav carousel__nav--next" type="button" data-viewer-next aria-label="Следующее фото">›</button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(modal);
 
-      modal.addEventListener('click', (e) => {
-        if (e.target === modal) modal.classList.remove('is-open');
-      });
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) closeViewer();
+    });
+    modal.querySelector('.image-modal__close').addEventListener('click', closeViewer);
+    modal.querySelector('[data-viewer-prev]').addEventListener('click', () => showInViewer(viewer.index - 1));
+    modal.querySelector('[data-viewer-next]').addEventListener('click', () => showInViewer(viewer.index + 1));
 
-      modal.querySelector('.image-modal__close').addEventListener('click', () => {
-        modal.classList.remove('is-open');
-      });
-    }
+    document.addEventListener('keydown', (e) => {
+      if (!modal.classList.contains('is-open')) return;
+      if (e.key === 'Escape') closeViewer();
+      if (e.key === 'ArrowLeft') showInViewer(viewer.index - 1);
+      if (e.key === 'ArrowRight') showInViewer(viewer.index + 1);
+    });
 
-    modal.querySelector('.image-modal__title').textContent = title;
+    // свайп по фото в просмотрщике
+    let touchX = null;
+    const body = modal.querySelector('.image-modal__body');
+    body.addEventListener('touchstart', (e) => { touchX = e.touches[0].clientX; }, { passive: true });
+    body.addEventListener('touchend', (e) => {
+      if (touchX === null) return;
+      const dx = e.changedTouches[0].clientX - touchX;
+      touchX = null;
+      if (Math.abs(dx) > 40) showInViewer(viewer.index + (dx < 0 ? 1 : -1));
+    });
+
+    viewer.modal = modal;
+    return modal;
+  }
+
+  function showInViewer(index) {
+    if (index < 0 || index >= viewer.items.length) return;
+    viewer.index = index;
+
+    const modal = viewer.modal;
+    const many = viewer.items.length > 1;
     const img = modal.querySelector('img');
-    img.src = src;
-    img.alt = title;
-    modal.classList.add('is-open');
+    img.src = viewer.items[index];
+    img.alt = many ? `${viewer.title}, фото ${index + 1}` : viewer.title;
+    modal.querySelector('.image-modal__title').textContent = viewer.title;
+    modal.querySelector('.image-modal__counter').textContent = many ? `${index + 1} / ${viewer.items.length}` : '';
+
+    const prev = modal.querySelector('[data-viewer-prev]');
+    const next = modal.querySelector('[data-viewer-next]');
+    prev.hidden = !many;
+    next.hidden = !many;
+    prev.disabled = index === 0;
+    next.disabled = index === viewer.items.length - 1;
+
+    if (viewer.onChange) viewer.onChange(index);
+  }
+
+  function openImageGallery(items, index = 0, title = 'Фото', onChange = null) {
+    ensureModal();
+    viewer.items = items;
+    viewer.title = title;
+    viewer.onChange = onChange;
+    viewer.returnFocus = document.activeElement;
+    viewer.modal.classList.add('is-open');
+    showInViewer(index);
+    viewer.modal.querySelector('.image-modal__close').focus();
+  }
+
+  function closeViewer() {
+    if (!viewer.modal) return;
+    viewer.modal.classList.remove('is-open');
+    if (viewer.returnFocus) viewer.returnFocus.focus();
+  }
+
+  function openImageModal(src, title = 'Фото') {
+    openImageGallery([src], 0, title);
+  }
+
+  function enhanceCarousels() {
+    document.querySelectorAll('[data-carousel]').forEach((carousel) => {
+      const track = carousel.querySelector('.carousel__track');
+      const slides = [...carousel.querySelectorAll('.carousel__slide')];
+      const thumbs = [...carousel.querySelectorAll('[data-carousel-to]')];
+      const current = carousel.querySelector('[data-carousel-current]');
+      const prev = carousel.querySelector('[data-carousel-prev]');
+      const next = carousel.querySelector('[data-carousel-next]');
+      const title = carousel.dataset.title || 'Фото';
+      const sources = slides.map((slide) => slide.dataset.src);
+      let index = 0;
+
+      const setActive = (i) => {
+        index = i;
+        if (current) current.textContent = String(i + 1);
+        if (prev) prev.disabled = i === 0;
+        if (next) next.disabled = i === slides.length - 1;
+        thumbs.forEach((thumb, t) => {
+          thumb.classList.toggle('is-active', t === i);
+          if (t === i) thumb.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+        });
+      };
+
+      const goTo = (i) => {
+        const target = Math.max(0, Math.min(slides.length - 1, i));
+        track.scrollTo({ left: target * track.clientWidth });
+        setActive(target);
+      };
+
+      // текущий слайд определяем по прокрутке — так работают и свайп, и тачпад
+      let scrollTimer = null;
+      track.addEventListener('scroll', () => {
+        clearTimeout(scrollTimer);
+        scrollTimer = setTimeout(() => {
+          const i = Math.round(track.scrollLeft / track.clientWidth);
+          if (i !== index) setActive(i);
+        }, 60);
+      }, { passive: true });
+
+      if (prev) prev.addEventListener('click', () => goTo(index - 1));
+      if (next) next.addEventListener('click', () => goTo(index + 1));
+      thumbs.forEach((thumb) => {
+        thumb.addEventListener('click', () => goTo(Number(thumb.dataset.carouselTo)));
+      });
+
+      track.addEventListener('keydown', (e) => {
+        if (e.key === 'ArrowLeft') { e.preventDefault(); goTo(index - 1); }
+        if (e.key === 'ArrowRight') { e.preventDefault(); goTo(index + 1); }
+        if (e.key === 'Enter') openImageGallery(sources, index, title, goTo);
+      });
+
+      const openViewer = () => openImageGallery(sources, index, title, goTo);
+      slides.forEach((slide) => slide.addEventListener('click', openViewer));
+      carousel.querySelector('[data-carousel-zoom]')?.addEventListener('click', openViewer);
+
+      // после поворота экрана / ресайза остаёмся на том же фото
+      window.addEventListener('resize', () => {
+        track.style.scrollBehavior = 'auto';
+        track.scrollLeft = index * track.clientWidth;
+        track.style.scrollBehavior = '';
+      });
+
+      setActive(0);
+    });
   }
 
   function syncInputFiles(input, files) {
@@ -41,7 +177,7 @@
     input.files = dt.files;
   }
 
-  function renderPreview(container, files, input) {
+  function renderPreview(container, files, input, onChange) {
     if (!container) return;
 
     if (!files.length) {
@@ -76,7 +212,45 @@
       btn.addEventListener('click', () => {
         files.splice(index, 1);
         syncInputFiles(input, files);
-        renderPreview(container, files, input);
+        if (onChange) {
+          onChange();
+        } else {
+          renderPreview(container, files, input);
+        }
+      });
+    });
+  }
+
+  function pluralFiles(n) {
+    const mod10 = n % 10;
+    const mod100 = n % 100;
+    if (mod10 === 1 && mod100 !== 11) return 'файл';
+    if (mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14)) return 'файла';
+    return 'файлов';
+  }
+
+  function formatMb(bytes) {
+    return (bytes / 1024 / 1024).toFixed(1).replace('.', ',');
+  }
+
+  /**
+   * Общий размер всех файлов формы не должен превышать лимит запроса — иначе сервер отклонит её целиком.
+   */
+  function guardUploadForms() {
+    document.querySelectorAll('form[enctype="multipart/form-data"]').forEach((form) => {
+      const widget = form.querySelector('[data-upload-widget][data-max-request-bytes]');
+      if (!widget) return;
+
+      form.addEventListener('submit', (e) => {
+        const maxRequestBytes = Number(widget.dataset.maxRequestBytes);
+        const inputs = [...form.querySelectorAll('input[type="file"]')];
+        const total = inputs.flatMap((input) => [...input.files]).reduce((sum, file) => sum + file.size, 0);
+        if (total <= maxRequestBytes) return;
+
+        e.preventDefault();
+        const message = `Все фото вместе весят ${formatMb(total)} МБ, а можно не больше ${widget.dataset.maxRequestMb} МБ. Убери часть фото.`;
+        inputs.forEach((input) => input.dispatchEvent(new CustomEvent('upload-error', { detail: message })));
+        widget.scrollIntoView({ behavior: 'smooth', block: 'center' });
       });
     });
   }
@@ -139,36 +313,78 @@
       input.classList.add('file-control__input');
 
       let selectedFiles = [];
+      let truncated = false;
+      let errorText = '';
+
+      const maxImages = Number(widget?.dataset.max || 5);
+      const maxFileBytes = Number(widget?.dataset.maxFileBytes || 0);
+      const maxFileMb = widget?.dataset.maxFileMb;
+      const keptCount = () => widget
+        ? widget.querySelectorAll('input[name="keptImageIds"]:checked').length
+        : 0;
+      // одиночный выбор (фото производителя) заменяет текущее фото, поэтому лимит не зависит от уже загруженных
+      const allowedNew = () => input.multiple ? Math.max(maxImages - keptCount(), 0) : 1;
 
       const updateState = () => {
         const filesCount = selectedFiles.length;
         count.textContent = String(filesCount);
 
         if (filesCount === 0) {
-          status.textContent = 'Файлы не выбраны';
+          status.textContent = allowedNew() === 0 ? `Достигнут лимит ${maxImages} фото` : 'Файлы не выбраны';
           count.classList.remove('is-selected');
         } else {
-          status.textContent = `Выбрано ${filesCount} файл${filesCount === 1 ? '' : 'ов'}`;
+          status.textContent = `Выбрано ${filesCount} ${pluralFiles(filesCount)}`
+            + (truncated ? ` (лимит ${maxImages} фото)` : '');
           count.classList.add('is-selected');
         }
 
+        if (errorText) {
+          status.textContent = errorText + (filesCount ? ` Выбрано: ${filesCount}.` : '');
+        }
+        status.classList.toggle('is-error', Boolean(errorText));
+
         if (countBadge) {
-          countBadge.textContent = `${filesCount}/5`;
+          const total = input.multiple ? keptCount() + filesCount : (filesCount || keptCount());
+          countBadge.textContent = `${total}/${maxImages}`;
         }
 
-        renderPreview(previewContainer, selectedFiles.map((f) => ({
-          raw: f.raw,
-          url: f.url
-        })), input);
+        // после удаления файла из превью старое сообщение об ошибке уже неактуально
+        renderPreview(previewContainer, selectedFiles, input, () => {
+          errorText = '';
+          updateState();
+        });
       };
 
       input.addEventListener('change', () => {
-        selectedFiles = [...input.files].map((file) => ({
+        const all = [...input.files];
+        // слишком большие файлы сервер всё равно отклонит — отсекаем сразу и говорим какие
+        const tooBig = maxFileBytes ? all.filter((file) => file.size > maxFileBytes) : [];
+        const files = all.filter((file) => !tooBig.includes(file));
+
+        errorText = tooBig.length
+          ? `Не добавлены — больше ${maxFileMb} МБ: ${tooBig.map((f) => `${f.name} (${formatMb(f.size)} МБ)`).join(', ')}.`
+          : '';
+        truncated = files.length > allowedNew();
+        selectedFiles = files.slice(0, allowedNew()).map((file) => ({
           raw: file,
           url: URL.createObjectURL(file)
         }));
+        if (truncated || tooBig.length) {
+          syncInputFiles(input, selectedFiles);
+        }
         updateState();
       });
+
+      input.addEventListener('upload-error', (e) => {
+        errorText = e.detail;
+        updateState();
+      });
+
+      if (widget) {
+        widget.querySelectorAll('input[name="keptImageIds"]').forEach((checkbox) => {
+          checkbox.addEventListener('change', updateState);
+        });
+      }
 
       updateState();
     });
@@ -186,7 +402,7 @@
       rows.forEach((row, index) => {
         const select = row.querySelector('select');
         const input = row.querySelector('input');
-        if (select) select.name = `specifications[${index}].id`;
+        if (select) select.name = `specifications[${index}].specificationTypeId`;
         if (input) input.name = `specifications[${index}].value`;
       });
     };
@@ -218,7 +434,9 @@
   function enhanceImageViews() {
     document.querySelectorAll('[data-image-src]').forEach((item) => {
       item.style.cursor = 'zoom-in';
-      item.addEventListener('click', () => {
+      item.addEventListener('click', (e) => {
+        // клик по галочке «Оставить» не должен открывать просмотр
+        if (e.target.closest('input, label')) return;
         openImageModal(item.dataset.imageSrc, item.dataset.imageTitle || 'Фото');
       });
     });
@@ -237,8 +455,10 @@
 
   document.addEventListener('DOMContentLoaded', () => {
     enhanceFileInputs();
+    guardUploadForms();
     enhanceSpecRows();
     enhanceImageViews();
+    enhanceCarousels();
   });
 })();
 

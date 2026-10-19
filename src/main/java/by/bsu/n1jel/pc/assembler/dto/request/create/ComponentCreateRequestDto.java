@@ -19,4 +19,13 @@ public class ComponentCreateRequestDto {
     Integer stockQuantity;
     List<SpecificationCreateRequestDto> specifications;
 
+    // Веб-форма строится по ComponentInfoResponseDto и шлёт producerId / componentTypeId
+
+    public void setProducerId(Long producerId) {
+        this.producer = producerId;
+    }
+
+    public void setComponentTypeId(Long componentTypeId) {
+        this.componentType = componentTypeId;
+    }
 }
