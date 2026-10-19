@@ -18,7 +18,7 @@ services:
       MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
       LOG_LEVEL_SQL: ${LOG_LEVEL_SQL:-info}
     ports:
-      - "${APP_PORT:-8080}:8080"
+      - "${APP_PORT:-8085}:8085"
 
   db:
     image: postgres:18
@@ -28,9 +28,6 @@ services:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: ${POSTGRES_DB:-pc_assembler}
-    # наружу не публикуется, доступ только с самого сервера
-    ports:
-      - "127.0.0.1:5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql
     healthcheck:
@@ -40,7 +37,6 @@ services:
       retries: 10
 
   minio:
-    # minio/minio убран с Docker Hub — используем community-форк (github.com/pgsty/minio)
     image: pgsty/minio:RELEASE.2026-08-04T00-00-00Z
     container_name: minio
     restart: unless-stopped
@@ -48,10 +44,6 @@ services:
       MINIO_ROOT_USER: ${MINIO_ROOT_USER}
       MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
     command: server /data --console-address ":9001"
-    # консоль MinIO доступна только с сервера (или через ssh -L 9001:localhost:9001)
-    ports:
-      - "127.0.0.1:9000:9000"
-      - "127.0.0.1:9001:9001"
     volumes:
       - minio_data:/data
     healthcheck:
@@ -63,5 +55,3 @@ services:
 volumes:
   postgres_data:
   minio_data:
-
-# docker compose up -d --build
