@@ -1,31 +1,67 @@
 services:
-  db:
-    image: postgres:latest
-    container_name: postgres
-    restart: always
+  app:
+    build: .
+    image: pc-assembler:latest
+    container_name: pc-assembler
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
     environment:
-      POSTGRES_USER: root
-      POSTGRES_PASSWORD: 12345678
-      POSTGRES_DB: pc_assembler
+      DB_URL: jdbc:postgresql://db:5432/${POSTGRES_DB:-pc_assembler}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      MINIO_ENDPOINT: http://minio:9000
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+      LOG_LEVEL_SQL: ${LOG_LEVEL_SQL:-info}
     ports:
-      - "5432:5432"
+      - "${APP_PORT:-8080}:8080"
+
+  db:
+    image: postgres:18
+    container_name: postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB:-pc_assembler}
+    # наружу не публикуется, доступ только с самого сервера
+    ports:
+      - "127.0.0.1:5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
 
   minio:
-    image: minio/minio:latest
+    # minio/minio убран с Docker Hub — используем community-форк (github.com/pgsty/minio)
+    image: pgsty/minio:RELEASE.2026-08-04T00-00-00Z
     container_name: minio
-    restart: always
-    ports:
-      - "9000:9000"
-      - "9001:9001"
+    restart: unless-stopped
     environment:
       MINIO_ROOT_USER: ${MINIO_ROOT_USER}
       MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
-    volumes:
-      - /home/Apps/minio/data:/data
     command: server /data --console-address ":9001"
+    # консоль MinIO доступна только с сервера (или через ssh -L 9001:localhost:9001)
+    ports:
+      - "127.0.0.1:9000:9000"
+      - "127.0.0.1:9001:9001"
+    volumes:
+      - minio_data:/data
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
 volumes:
   postgres_data:
+  minio_data:
 
-# docker-compose --env-file .env up -d
+# docker compose up -d --build

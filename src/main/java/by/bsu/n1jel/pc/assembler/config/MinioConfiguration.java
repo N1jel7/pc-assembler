@@ -8,7 +8,8 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class MinioConfiguration {
 
-    private static final String ENDPOINT = "http://localhost:9000";
+    @Value("${minio.endpoint}")
+    private String endpoint;
     @Value("${minio.root.user}")
     private String username;
     @Value("${minio.root.password}")
@@ -17,7 +18,7 @@ public class MinioConfiguration {
     @Bean
     public MinioClient minioClient() {
         return new MinioClient.Builder()
-                .endpoint(ENDPOINT)
+                .endpoint(endpoint)
                 .credentials(username, password)
                 .build();
     }

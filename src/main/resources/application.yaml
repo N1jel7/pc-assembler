@@ -1,4 +1,7 @@
 spring:
+  # для локального запуска из IDE; в контейнере переменные приходят из docker-compose
+  config:
+    import: optional:file:.env[.properties]
   servlet:
     multipart:
       max-file-size: 5MB
@@ -7,6 +10,10 @@ spring:
     enabled: true
   application:
     name: pc-assembler
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/pc_assembler}
+    username: ${POSTGRES_USER}
+    password: ${POSTGRES_PASSWORD}
   jpa:
     hibernate:
       ddl-auto: none
@@ -14,7 +21,7 @@ spring:
 
 logging:
   level:
-    sql: debug
+    sql: ${LOG_LEVEL_SQL:debug}
 
 springdoc:
   swagger-ui:
@@ -22,6 +29,7 @@ springdoc:
 
 ## Properties
 minio:
+  endpoint: ${MINIO_ENDPOINT:http://localhost:9000}
   root:
     user: ${MINIO_ROOT_USER}
     password: ${MINIO_ROOT_PASSWORD}
